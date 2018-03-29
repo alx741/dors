@@ -1,5 +1,19 @@
 #include "bitvec.h"
 
+uint8_t vec2byte(BIT_8VEC_t vec)
+{
+    uint8_t byte = 0;
+    byte = byte | (vec.v0 << 0);
+    byte = byte | (vec.v1 << 1);
+    byte = byte | (vec.v2 << 2);
+    byte = byte | (vec.v3 << 3);
+    byte = byte | (vec.v4 << 4);
+    byte = byte | (vec.v5 << 5);
+    byte = byte | (vec.v6 << 6);
+    byte = byte | (vec.v7 << 7);
+    return byte;
+}
+
 inline bool get_vec_bit(BIT_8VEC_t vec, uint8_t index)
 {
     switch (index)
