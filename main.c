@@ -12,12 +12,9 @@ int main(void)
     rcc_setup_in_8mhz_hse_out_72mhz();
     eyes_init();
 
-    /* shift_push(0b00000011); */
-    /* shift_push(0b11111110); */
-    PORTC->ODR13 = get_eye_dot(some_eye, 3, 3);
-
     while (true)
     {
+        render_eye(eye_happy);
     }
 }
 
