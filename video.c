@@ -4,8 +4,10 @@
 #include <rcc.h>
 #include <cmsis.h>
 
+#define REFRESH_RATE_HZ  400
+
 BIT_8VEC_t FRAME_BUFFER[8] = {0};
-static uint8_t CURRENT_RENDERING_ROW = 0;
+static uint8_t CURRENT_ROW = 0;
 
 void setup_timer(void);
 void render_row(uint8_t index, uint8_t data);
@@ -36,15 +38,9 @@ void video_init(void)
 
 void render()
 {
-    render_row(CURRENT_RENDERING_ROW, vec2byte(FRAME_BUFFER[CURRENT_RENDERING_ROW]));
-    if (CURRENT_RENDERING_ROW == 7)
-    {
-        CURRENT_RENDERING_ROW = 0;
-    }
-    else
-    {
-        CURRENT_RENDERING_ROW++;
-    }
+    render_row(CURRENT_ROW, vec2byte(FRAME_BUFFER[CURRENT_ROW]));
+    if (CURRENT_ROW == 7) { CURRENT_ROW = 0; }
+    else { CURRENT_ROW++; }
 }
 
 void render_row(uint8_t index, uint8_t data)
@@ -99,7 +95,7 @@ void setup_timer(void)
     TIM2_CR1->DIR = false; // Upcounter
     *TIM2_CNT = 0;
     *TIM2_PSC = 7200-1; // 10Khz
-    *TIM2_ARR = 10-1; //
+    *TIM2_ARR = ((1000/REFRESH_RATE_HZ)*10)-1;
     TIM2_DIER->UIE = true; // TIM2 interrupt enable
     TIM2_CR1->CEN = true; // Enable counter
 }
