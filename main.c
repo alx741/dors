@@ -11,10 +11,10 @@ int main(void)
 {
     rcc_setup_in_8mhz_hse_out_72mhz();
     eyes_init();
+    select_eyes(&eye_happy);
 
     while (true)
     {
-        render_eye(eye_happy);
     }
 }
 

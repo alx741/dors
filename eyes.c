@@ -1,9 +1,14 @@
 #include "eyes.h"
 #include <f1.h>
 #include <rcc.h>
+#include <cmsis.h>
+#include <string.h>
 
 void shift_push(uint8_t c);
 void sleep(void);
+void setup_timer(void);
+
+static EYE_t FRAME_BUFFER = {0};
 
 void eyes_init(void)
 {
@@ -25,6 +30,22 @@ void eyes_init(void)
 
     // Eye 2 pins
     // ...
+
+    setup_timer();
+}
+
+void setup_timer(void)
+{
+    __enable_irq();
+    NVIC_EnableIRQ(TIM2_IRQ);
+    NVIC_SetPriority(TIM2_IRQ, 1);
+    RCC_APB1ENR->TIM2EN = true;
+    TIM2_CR1->DIR = false; // Upcounter
+    *TIM2_CNT = 0;
+    *TIM2_PSC = 7200-1; // 10Khz
+    *TIM2_ARR = 40-1; // 20ms
+    TIM2_DIER->UIE = true; // TIM2 interrupt enable
+    TIM2_CR1->CEN = true; // Enable counter
 }
 
 uint8_t get_eye_row(EYE_t eye, uint8_t row)
@@ -37,12 +58,18 @@ bool get_eye_dot(EYE_t eye, uint8_t row, uint8_t col)
     return get_vec_bit(eye[row], col);
 }
 
-void render_eye(EYE_t eye)
+// TODO: use enum to select eyes
+void select_eyes(EYE_t *eye)
+{
+    memcpy(&FRAME_BUFFER, eye, sizeof(EYE_t));
+}
+
+void render_eyes()
 {
     for (int i=0; i<8; i++)
     {
         sleep();
-        render_row(i, get_eye_row(eye, i));
+        render_row(i, get_eye_row(FRAME_BUFFER, i));
     }
 }
 
@@ -88,6 +115,11 @@ void sleep(void)
     for (int i = 0; i < 1000; i++);
 }
 
+void TIM2_ISR(void)
+{
+    TIM2_SR->UIF = false;
+    render_eyes();
+}
 
 const EYE_t eye_default = {
       { 0,0,0,0,0,0,0,0 }

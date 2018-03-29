@@ -14,7 +14,7 @@ $(BINARY).elf: $(OBJECTS)
 	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -nostartfiles -Wl,--gc-sections,-static -L$(STM32F1LIB_DIR) -L$(STM32F1LIB_LINKER_DIR) -T$(STM32F1LIB_LINKER_DIR)/$(LINKER_SCRIPT) $^ -lstm32f1 -lm -o $@
 
 %.o: %.c
-	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -c -I$(STM32F1LIB_INCLUDE_DIR) $^ -o $@
+	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -std=gnu11 -c -I$(STM32F1LIB_INCLUDE_DIR) $^ -o $@
 
 burn: $(BINARY).bin
 	st-flash write $< 0x8000000
