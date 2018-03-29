@@ -9,6 +9,7 @@ void sleep(void);
 void setup_timer(void);
 
 static EYE_t FRAME_BUFFER = {0};
+static uint8_t CURRENT_RENDERING_ROW = 0;
 
 void eyes_init(void)
 {
@@ -43,7 +44,7 @@ void setup_timer(void)
     TIM2_CR1->DIR = false; // Upcounter
     *TIM2_CNT = 0;
     *TIM2_PSC = 7200-1; // 10Khz
-    *TIM2_ARR = 40-1; // 20ms
+    *TIM2_ARR = 10-1; //
     TIM2_DIER->UIE = true; // TIM2 interrupt enable
     TIM2_CR1->CEN = true; // Enable counter
 }
@@ -66,10 +67,14 @@ void select_eyes(EYE_t *eye)
 
 void render_eyes()
 {
-    for (int i=0; i<8; i++)
+    render_row(CURRENT_RENDERING_ROW, get_eye_row(FRAME_BUFFER, CURRENT_RENDERING_ROW));
+    if (CURRENT_RENDERING_ROW == 7)
     {
-        sleep();
-        render_row(i, get_eye_row(FRAME_BUFFER, i));
+        CURRENT_RENDERING_ROW = 0;
+    }
+    else
+    {
+        CURRENT_RENDERING_ROW++;
     }
 }
 
