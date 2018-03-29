@@ -1,44 +1,47 @@
 #include <f1.h>
 #include <rcc.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
+#include "bitvec.h"
 
 void init_gpio(void);
 void shift_push(uint8_t c);
 void delay(void);
 
-// Memory efficient 8x8 bit matrix
-typedef struct
-{
-    unsigned row1_col1 : 1, row1_col2 : 1, row1_col3 : 1, row1_col4 : 1, row1_col5 : 1, row1_col6 : 1, row1_col7 : 1, row1_col8 : 1;
-    unsigned row2_col1 : 1, row2_col2 : 1, row2_col3 : 1, row2_col4 : 1, row2_col5 : 1, row2_col6 : 1, row2_col7 : 1, row2_col8 : 1;
-    unsigned row3_col1 : 1, row3_col2 : 1, row3_col3 : 1, row3_col4 : 1, row3_col5 : 1, row3_col6 : 1, row3_col7 : 1, row3_col8 : 1;
-    unsigned row4_col1 : 1, row4_col2 : 1, row4_col3 : 1, row4_col4 : 1, row4_col5 : 1, row4_col6 : 1, row4_col7 : 1, row4_col8 : 1;
-    unsigned row5_col1 : 1, row5_col2 : 1, row5_col3 : 1, row5_col4 : 1, row5_col5 : 1, row5_col6 : 1, row5_col7 : 1, row5_col8 : 1;
-    unsigned row6_col1 : 1, row6_col2 : 1, row6_col3 : 1, row6_col4 : 1, row6_col5 : 1, row6_col6 : 1, row6_col7 : 1, row6_col8 : 1;
-    unsigned row7_col1 : 1, row7_col2 : 1, row7_col3 : 1, row7_col4 : 1, row7_col5 : 1, row7_col6 : 1, row7_col7 : 1, row7_col8 : 1;
-    unsigned row8_col1 : 1, row8_col2 : 1, row8_col3 : 1, row8_col4 : 1, row8_col5 : 1, row8_col6 : 1, row8_col7 : 1, row8_col8 : 1;
-} EYE_t;
+typedef BIT_8VEC_t EYE_t[8];
 
-
-const EYE_t some_eye =
-    { 0,0,0,0,0,0,0,0
-    , 0,0,0,0,0,0,0,0
-    , 0,0,1,0,0,0,0,0
-    , 0,0,0,1,0,0,0,0
-    , 0,0,0,0,0,0,0,0
-    , 0,0,0,0,0,0,0,0
-    , 0,0,0,0,0,0,0,0
-    , 0,0,0,0,0,0,0,0
+const EYE_t some_eye = {
+      { 0,0,0,0,0,0,0,0 }
+    , { 0,0,0,0,0,0,0,0 }
+    , { 0,0,1,0,0,0,0,0 }
+    , { 0,0,0,1,0,0,0,0 }
+    , { 0,0,0,0,0,0,0,0 }
+    , { 0,0,0,0,0,0,0,0 }
+    , { 0,0,0,0,0,0,0,0 }
+    , { 0,0,0,0,0,0,0,0 }
     };
+
+bool get_eye_dot(const EYE_t eye, uint8_t row, uint8_t col)
+{
+    return get_vec_bit(eye[row], col);
+}
+
+/* void render_eye (EYE_t eye) */
+/* { */
+/*     for (int i=0; i<8; i++) */
+/*     { */
+/*     } */
+/* } */
 
 int main(void)
 {
     rcc_setup_in_8mhz_hse_out_72mhz();
     init_gpio();
 
-    shift_push(0b00000011);
-    shift_push(0b11111110);
+    /* shift_push(0b00000011); */
+    /* shift_push(0b11111110); */
+    /* PORTC->ODR13 = get_eye_dot(some_eye, 3, 3); */
 
     while (true)
     {
