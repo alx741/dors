@@ -33,6 +33,7 @@ void video_init(void)
 
     // Matrix Left
     // ...
+
     setup_timer();
 }
 
@@ -58,7 +59,7 @@ void shift_push(uint8_t c)
     PORTA->ODR2 = false;
 
     // Push data
-    for (int i=0; i<8; i++)
+    for (int i = 0; i < 8; i++)
     {
         if (c & (0x80 >> i))
         {
@@ -75,6 +76,7 @@ void shift_push(uint8_t c)
     }
 
     // Latch
+
     PORTA->ODR1 = true;
     PORTA->ODR1 = false;
     PORTA->ODR3 = false; // Enable output
@@ -94,8 +96,8 @@ void setup_timer(void)
     RCC_APB1ENR->TIM2EN = true;
     TIM2_CR1->DIR = false; // Upcounter
     *TIM2_CNT = 0;
-    *TIM2_PSC = 7200-1; // 10Khz
-    *TIM2_ARR = ((1000/REFRESH_RATE_HZ)*10)-1;
+    *TIM2_PSC = 7200 - 1; // 10Khz
+    *TIM2_ARR = ((1000 / REFRESH_RATE_HZ) * 10) - 1;
     TIM2_DIER->UIE = true; // TIM2 interrupt enable
     TIM2_CR1->CEN = true; // Enable counter
 }
