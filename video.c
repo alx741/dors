@@ -4,7 +4,7 @@
 #include <rcc.h>
 #include <cmsis.h>
 
-#define REFRESH_RATE_HZ  400
+#define REFRESH_RATE_HZ  500
 
 BIT_8VEC_t FRAME_BUFFER[8] = {0};
 static uint8_t CURRENT_ROW = 0;
