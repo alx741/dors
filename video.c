@@ -81,12 +81,6 @@ void shift_push(uint8_t c)
     PORTA->ODR3 = false; // Enable output
 }
 
-void TIM2_ISR(void)
-{
-    TIM2_SR->UIF = false;
-    render();
-}
-
 void setup_timer(void)
 {
     __enable_irq();
@@ -99,4 +93,10 @@ void setup_timer(void)
     *TIM2_ARR = ((1000 / REFRESH_RATE_HZ) * 10) - 1;
     TIM2_DIER->UIE = true; // TIM2 interrupt enable
     TIM2_CR1->CEN = true; // Enable counter
+}
+
+void TIM2_ISR(void)
+{
+    TIM2_SR->UIF = false;
+    render();
 }
