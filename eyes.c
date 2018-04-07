@@ -11,9 +11,15 @@ void eyes_init(void)
 }
 
 // TODO: use enum to select eyes
-void select_eyes(EYE_t *eye)
+void select_eyes(EYE_t eye1, EYE_t eye2)
 {
-    memcpy(&FRAME_BUFFER, eye, sizeof(EYE_t));
+    void *fb_ptr = &FRAME_BUFFER;
+
+    for (int i = 0; i < 8; i++)
+    {
+        memset(fb_ptr++, vec2byte(eye2[i]), 1);
+        memset(fb_ptr++, vec2byte(eye1[i]), 1);
+    }
 }
 
 const EYE_t eye_default = {
@@ -37,4 +43,28 @@ const EYE_t eye_happy = {
     , { 1,1,0,0,0,0,1,1 }
     , { 1,0,0,0,0,0,0,1 }
     , { 0,0,0,0,0,0,0,0 }
+    };
+
+
+const EYE_t eye_full = {
+      { 1,1,1,1,1,1,1,1 }
+    , { 1,1,1,1,1,1,1,1 }
+    , { 1,1,1,1,1,1,1,1 }
+    , { 1,1,1,1,1,1,1,1 }
+    , { 1,1,1,1,1,1,1,1 }
+    , { 1,1,1,1,1,1,1,1 }
+    , { 1,1,1,1,1,1,1,1 }
+    , { 1,1,1,1,1,1,1,1 }
+    };
+
+
+const EYE_t eye_dead = {
+      { 1,0,0,0,0,0,0,1 }
+    , { 0,1,0,0,0,0,1,0 }
+    , { 0,0,1,0,0,1,0,0 }
+    , { 0,0,0,1,1,0,0,0 }
+    , { 0,0,0,1,1,0,0,0 }
+    , { 0,0,1,0,0,1,0,0 }
+    , { 0,1,0,0,0,0,1,0 }
+    , { 1,0,0,0,0,0,0,1 }
     };

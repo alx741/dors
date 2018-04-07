@@ -3,21 +3,20 @@
 #include <f1.h>
 #include <rcc.h>
 #include <cmsis.h>
+#include <stdint.h>
 
 #define REFRESH_RATE_HZ  500
 
-BIT_8VEC_t FRAME_BUFFER[8] = {0};
+uint16_t FRAME_BUFFER[8] = {0};
 static uint8_t CURRENT_ROW = 0;
 
 void setup_timer(void);
-void render_row(uint8_t index, uint8_t data);
+void render_row(uint8_t index, uint16_t data);
 void shift_push(uint8_t c);
 
 void video_init(void)
 {
     RCC_APB2ENR->IOPAEN = true;
-
-    // Matrix Right
     PORTA->MODE0 = MODE_OUTPUT_2MHZ;
     PORTA->CNF0 = CNF_OUT_PUSH_PULL;
     PORTA->MODE1 = MODE_OUTPUT_2MHZ;
@@ -30,24 +29,24 @@ void video_init(void)
     PORTA->ODR1 = false;
     PORTA->ODR2 = false;
     PORTA->ODR3 = true;
-
-    // Matrix Left
-    // ...
-
     setup_timer();
 }
 
 void render()
 {
-    render_row(CURRENT_ROW, vec2byte(FRAME_BUFFER[CURRENT_ROW]));
+    render_row(CURRENT_ROW, FRAME_BUFFER[CURRENT_ROW]);
     if (CURRENT_ROW == 7) { CURRENT_ROW = 0; }
     else { CURRENT_ROW++; }
 }
 
-void render_row(uint8_t index, uint8_t data)
+void render_row(uint8_t index, uint16_t data)
 {
     uint8_t i = 0b00000001 << index;
-    shift_push(data);
+    uint8_t low = data & 0xFF;
+    uint8_t high = (data >> 8) & 0xFF;
+    shift_push(high);
+    shift_push(~i);
+    shift_push(low);
     shift_push(~i);
 }
 
