@@ -11,7 +11,7 @@ int main(void)
 {
     rcc_setup_in_8mhz_hse_out_72mhz();
     eyes_init();
-    select_eyes(eye_smile, eye_smile);
+    select_eyes(eye_squint, eye_squint);
 
     while (true)
     {
