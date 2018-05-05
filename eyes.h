@@ -13,5 +13,6 @@ void select_eyes(EYE_t eye1, EYE_t eye2);
  */
 const EYE_t eye_default;
 const EYE_t eye_happy;
+const EYE_t eye_smile;
 const EYE_t eye_full;
 const EYE_t eye_dead;
