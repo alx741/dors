@@ -3,6 +3,9 @@
 #include <usart.h>
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <unistd.h>
+
 #include <stdio.h>
 #include "eyes.h"
 #include "movement.h"
@@ -26,9 +29,10 @@ int main(void)
     int c;
     while (true)
     {
-        _read(0, &c, 1);
+        printf(">  ");
+        c = getchar();
 
-        putchar(c);
+        printf("\nchar: %c\n\n", c);
         fflush(stdout);
         if ((char) c == 'h')
         {
