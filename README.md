@@ -1,3 +1,3 @@
 # Dors - the emotional robot
 
-![](./artwork/logo_wide.png)
+![](./logo_wide.png)
