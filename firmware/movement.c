@@ -21,7 +21,7 @@ void movement_init()
     *TIM4_CNT  = 0;
     *TIM4_PSC  = 3600; // 10kHz
     *TIM4_ARR  = 200; // 50Hz
-    *TIM4_CCR1 = 33; // 10 - 50
+    *TIM4_CCR1 = 25; // 10 - 50
 
     TIM4_CCMR1->CC1S = false; // Compare output
     TIM4_CCMR1->OC1PE = true; // Enable preload register
@@ -32,4 +32,22 @@ void movement_init()
 
     TIM4_EGR->UG = true; // Generate update event
     TIM4_CR1->CEN = true; // Counter enable
+}
+
+void step_left()
+{
+    int current = *TIM4_CCR1;
+    if (current > 11)
+    {
+        *TIM4_CCR1 = current - 1;
+    }
+}
+
+void step_right()
+{
+    int current = *TIM4_CCR1;
+    if (current < 49)
+    {
+        *TIM4_CCR1 = current + 1;
+    }
 }

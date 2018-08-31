@@ -17,7 +17,7 @@ int main(void)
     rcc_setup_in_8mhz_hse_out_72mhz();
     usart_init_72mhz_9600baud();
     /* eyes_init(); */
-    /* movement_init(); */
+    movement_init();
 
     /* select_eyes(eye_happy, eye_happy); */
 
@@ -29,14 +29,18 @@ int main(void)
     int c;
     while (true)
     {
-        printf(">  ");
+        printf("\n\n>  ");
         c = getchar();
 
-        printf("\nchar: %c\n\n", c);
-        fflush(stdout);
-        if ((char) c == 'h')
+        if ((char) c == 'j')
         {
-            PORTC->ODR13 = false;
+            step_left();
+            PORTC->ODR13 ^= true;
+        }
+        else if ((char) c == 'k')
+        {
+            step_right();
+            PORTC->ODR13 ^= true;
         }
     }
 }
