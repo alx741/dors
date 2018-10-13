@@ -3,8 +3,8 @@
 #include <rcc.h>
 #include <stdbool.h>
 
-#define PITCH_INIT_VAL 1500
-#define YAW_INIT_VAL   1500
+#define PITCH_INIT_VAL 1100
+#define YAW_INIT_VAL   1400
 
 void movement_init()
 {
@@ -50,7 +50,7 @@ void step_left()
     int current = *TIM4_CCR2;
     if (current > 600)
     {
-        *TIM4_CCR2 = current - 10;
+        *TIM4_CCR2 = current - 20;
     }
 }
 
@@ -59,7 +59,7 @@ void step_right()
     int current = *TIM4_CCR2;
     if (current < 2300)
     {
-        *TIM4_CCR2 = current + 10;
+        *TIM4_CCR2 = current + 20;
     }
 }
 
@@ -68,7 +68,7 @@ void step_down()
     int current = *TIM4_CCR1;
     if (current > 600)
     {
-        *TIM4_CCR1 = current - 10;
+        *TIM4_CCR1 = current - 20;
     }
 }
 
@@ -77,6 +77,6 @@ void step_up()
     int current = *TIM4_CCR1;
     if (current < 2300)
     {
-        *TIM4_CCR1 = current + 10;
+        *TIM4_CCR1 = current + 20;
     }
 }
