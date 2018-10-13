@@ -3,9 +3,11 @@
 #include <rcc.h>
 #include <stdbool.h>
 
+#define PITCH_INIT_VAL 20
+
 void movement_init()
 {
-    // SG90 - 50Hz carrier; 1ms - 2ms duty cycle
+    // 50Hz carrier; 1ms - 2ms duty cycle
     RCC_APB1ENR->TIM4EN = true;
     RCC_APB2ENR->IOPBEN = true;
     RCC_APB2ENR->AFIOEN = true;
@@ -21,7 +23,7 @@ void movement_init()
     *TIM4_CNT  = 0;
     *TIM4_PSC  = 3600; // 10kHz
     *TIM4_ARR  = 200; // 50Hz
-    *TIM4_CCR1 = 25; // 10 - 50
+    *TIM4_CCR1 = PITCH_INIT_VAL; // 10 - 50
 
     TIM4_CCMR1->CC1S = false; // Compare output
     TIM4_CCMR1->OC1PE = true; // Enable preload register
