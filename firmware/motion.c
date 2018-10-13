@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #define PITCH_INIT_VAL 1500
+#define YAW_INIT_VAL   1500
 
 void movement_init()
 {
@@ -39,7 +40,7 @@ void movement_init()
 void step_left()
 {
     int current = *TIM4_CCR1;
-    if (current > 500)
+    if (current > 600)
     {
         *TIM4_CCR1 = current - 10;
     }
@@ -48,7 +49,7 @@ void step_left()
 void step_right()
 {
     int current = *TIM4_CCR1;
-    if (current < 2500)
+    if (current < 2300)
     {
         *TIM4_CCR1 = current + 10;
     }

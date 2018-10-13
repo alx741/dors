@@ -29,7 +29,7 @@ int main(void)
     int c;
     while (true)
     {
-        printf("\n\n>  ");
+        printf("%d\n\n>  ", *TIM4_CCR1);
         c = getchar();
 
         if ((char) c == 'j')
