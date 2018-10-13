@@ -48,7 +48,7 @@ void movement_init()
 void step_left()
 {
     int current = *TIM4_CCR2;
-    if (current > 600)
+    if (current > 1000)
     {
         *TIM4_CCR2 = current - 20;
     }
@@ -57,7 +57,7 @@ void step_left()
 void step_right()
 {
     int current = *TIM4_CCR2;
-    if (current < 2300)
+    if (current < 1800)
     {
         *TIM4_CCR2 = current + 20;
     }
@@ -66,7 +66,7 @@ void step_right()
 void step_down()
 {
     int current = *TIM4_CCR1;
-    if (current > 600)
+    if (current > 800)
     {
         *TIM4_CCR1 = current - 20;
     }
@@ -75,7 +75,7 @@ void step_down()
 void step_up()
 {
     int current = *TIM4_CCR1;
-    if (current < 2300)
+    if (current < 1600)
     {
         *TIM4_CCR1 = current + 20;
     }
