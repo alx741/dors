@@ -34,10 +34,20 @@ int main(void)
 
         if ((char) c == 'j')
         {
-            step_left();
+            step_down();
             PORTC->ODR13 ^= true;
         }
         else if ((char) c == 'k')
+        {
+            step_up();
+            PORTC->ODR13 ^= true;
+        }
+        else if ((char) c == 'h')
+        {
+            step_left();
+            PORTC->ODR13 ^= true;
+        }
+        else if ((char) c == 'l')
         {
             step_right();
             PORTC->ODR13 ^= true;
