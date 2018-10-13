@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 #include "eyes.h"
-#include "movement.h"
+#include "motion.h"
 
 void delay(void);
 

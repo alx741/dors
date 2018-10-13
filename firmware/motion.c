@@ -1,9 +1,9 @@
-#include "movement.h"
+#include "motion.h"
 #include <f1.h>
 #include <rcc.h>
 #include <stdbool.h>
 
-#define PITCH_INIT_VAL 20
+#define PITCH_INIT_VAL 1500
 
 void movement_init()
 {
@@ -21,9 +21,9 @@ void movement_init()
     TIM4_CR1->ARPE = true; // ARR is buffered
 
     *TIM4_CNT  = 0;
-    *TIM4_PSC  = 3600; // 10kHz
-    *TIM4_ARR  = 200; // 50Hz
-    *TIM4_CCR1 = PITCH_INIT_VAL; // 10 - 50
+    *TIM4_PSC  = 72; // 1MHz
+    *TIM4_ARR  = 20000; // 50Hz
+    *TIM4_CCR1 = PITCH_INIT_VAL; // 1000 - 2000
 
     TIM4_CCMR1->CC1S = false; // Compare output
     TIM4_CCMR1->OC1PE = true; // Enable preload register
@@ -39,17 +39,17 @@ void movement_init()
 void step_left()
 {
     int current = *TIM4_CCR1;
-    if (current > 11)
+    if (current > 500)
     {
-        *TIM4_CCR1 = current - 1;
+        *TIM4_CCR1 = current - 10;
     }
 }
 
 void step_right()
 {
     int current = *TIM4_CCR1;
-    if (current < 49)
+    if (current < 2500)
     {
-        *TIM4_CCR1 = current + 1;
+        *TIM4_CCR1 = current + 10;
     }
 }
