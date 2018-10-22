@@ -16,6 +16,9 @@ $(BINARY).elf: $(OBJECTS)
 %.o: %.c
 	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -std=gnu11 -c -I$(STM32F1LIB_INCLUDE_DIR) $^ -o $@
 
+interface:
+	picocom --imap lfcrlf -b 9600 -c /dev/ttyUSB0
+
 burn: $(BINARY).bin
 	st-flash write $< 0x8000000
 

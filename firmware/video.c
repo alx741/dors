@@ -89,7 +89,7 @@ void setup_timer(void)
     RCC_APB1ENR->TIM2EN = true;
     TIM2_CR1->DIR = false; // Upcounter
     *TIM2_CNT = 0;
-    *TIM2_PSC = 7200 - 1; // 10Khz
+    *TIM2_PSC = 3600 - 1; // 10Khz
     *TIM2_ARR = ((1000 / REFRESH_RATE_HZ) * 10) - 1;
     TIM2_DIER->UIE = true; // TIM2 interrupt enable
     TIM2_CR1->CEN = true; // Enable counter
