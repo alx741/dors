@@ -8,6 +8,7 @@
 #define REFRESH_RATE_HZ  350
 
 uint16_t FRAME_BUFFER[8] = {0};
+uint16_t FRAME_BUFFER_BACKUP[8] = {0};
 static uint8_t CURRENT_ROW = 0;
 
 void setup_timer(void);
@@ -30,6 +31,11 @@ void video_init(void)
     PORTA->ODR2 = false;
     PORTA->ODR3 = true;
     setup_timer();
+}
+
+void backup_frame_buffer(void)
+{
+    memcpy(FRAME_BUFFER_BACKUP, FRAME_BUFFER, sizeof(FRAME_BUFFER));
 }
 
 void render()
@@ -97,6 +103,6 @@ void setup_timer(void)
 
 void TIM2_ISR(void)
 {
-    TIM2_SR->UIF = false;
     render();
+    TIM2_SR->UIF = false;
 }
