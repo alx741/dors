@@ -7,6 +7,7 @@ typedef BIT_8VEC_t EYE_t[8];
 
 void eyes_init(void);
 void select_eyes(EYE_t eye_left, EYE_t eye_right);
+void blink(void);
 
 /*
  * Available eyes

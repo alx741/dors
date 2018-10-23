@@ -4,11 +4,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <unistd.h>
+/* #include <unistd.h> */
 
 #include <stdio.h>
 #include "eyes.h"
 #include "motion.h"
+#include "video.h"
 
 void delay(void);
 
@@ -19,7 +20,7 @@ int main(void)
     eyes_init();
     movement_init();
 
-    select_eyes(eye_happy, eye_happy);
+    select_eyes(eye_smile, eye_smile);
 
     RCC_APB2ENR->IOPCEN = true;
     PORTC->MODE13 = MODE_OUTPUT_50MHZ;
@@ -52,6 +53,17 @@ int main(void)
             step_right();
             PORTC->ODR13 ^= true;
         }
+        else if ((char) c == 'b')
+        {
+            /* printf("fb size: %d\n\n", sizeof(FRAME_BUFFER)); */
+            blink();
+        }
+        else if ((char) c == 'B')
+        {
+            /* printf("fb size: %d\n\n", sizeof(FRAME_BUFFER)); */
+            /* unblink(); */
+        }
+
     }
 }
 

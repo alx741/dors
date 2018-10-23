@@ -5,6 +5,10 @@
 #include <cmsis.h>
 #include <string.h>
 
+static uint8_t CURRENT_BLINK_PHASE = 0;
+static EYE_t* CURRENT_LEFT_EYE;
+static EYE_t* CURRENT_RIGHT_EYE;
+
 void eyes_init(void)
 {
     video_init();
@@ -14,11 +18,112 @@ void select_eyes(EYE_t eye_left, EYE_t eye_right)
 {
     void *fb_ptr = &FRAME_BUFFER;
 
+    CURRENT_LEFT_EYE  = eye_left;
+    CURRENT_RIGHT_EYE = eye_right;
+
     for (int i = 0; i < 8; i++)
     {
         memset(fb_ptr++, vec2byte(eye_right[i]), 1);
         memset(fb_ptr++, vec2byte(eye_left[i]), 1);
     }
+}
+
+void blink(void)
+{
+    if (CURRENT_BLINK_PHASE == 0)
+    {
+        backup_frame_buffer();
+        /* setup_blink_timer(); */
+    }
+    blink_advance_phase();
+    /* else if (CURRENT_RIGHT_EYE == 10) */
+    /* { */
+    /*     TIM3_CR1->CEN = false; // Disable counter */
+    /* } */
+}
+
+void blink_advance_phase(void)
+{
+    switch (CURRENT_BLINK_PHASE)
+    {
+        case 0:
+            FRAME_BUFFER[0] = 0x0000;
+            FRAME_BUFFER[7] = 0x0000;
+            CURRENT_BLINK_PHASE++;
+            break;
+
+        case 1:
+            FRAME_BUFFER[1] = 0x0000;
+            FRAME_BUFFER[6] = 0x0000;
+            CURRENT_BLINK_PHASE++;
+            break;
+
+        case 2:
+            FRAME_BUFFER[2] = 0x0000;
+            FRAME_BUFFER[5] = 0x0000;
+            CURRENT_BLINK_PHASE++;
+            break;
+
+        case 3:
+            FRAME_BUFFER[3] = 0xFFFF;
+            FRAME_BUFFER[4] = 0xFFFF;
+            CURRENT_BLINK_PHASE++;
+            break;
+
+        case 4:
+            FRAME_BUFFER[3] = 0x0000;
+            CURRENT_BLINK_PHASE++;
+            break;
+
+        case 5:
+            FRAME_BUFFER[4] = FRAME_BUFFER_BACKUP[4];
+            CURRENT_BLINK_PHASE++;
+            break;
+
+        case 6:
+            FRAME_BUFFER[3] = FRAME_BUFFER_BACKUP[3];
+            CURRENT_BLINK_PHASE++;
+            break;
+
+        case 7:
+            FRAME_BUFFER[2] = FRAME_BUFFER_BACKUP[2];
+            FRAME_BUFFER[5] = FRAME_BUFFER_BACKUP[5];
+            CURRENT_BLINK_PHASE++;
+            break;
+
+        case 8:
+            FRAME_BUFFER[1] = FRAME_BUFFER_BACKUP[1];
+            FRAME_BUFFER[6] = FRAME_BUFFER_BACKUP[6];
+            CURRENT_BLINK_PHASE++;
+            break;
+
+        case 9:
+            FRAME_BUFFER[0] = FRAME_BUFFER_BACKUP[0];
+            FRAME_BUFFER[7] = FRAME_BUFFER_BACKUP[7];
+            CURRENT_BLINK_PHASE = 0;
+            break;
+    }
+}
+
+
+void setup_blink_timer(void)
+{
+    __enable_irq();
+    NVIC_EnableIRQ(TIM3_IRQ);
+    NVIC_SetPriority(TIM3_IRQ, 1);
+    RCC_APB1ENR->TIM3EN = true;
+    TIM3_CR1->DIR = false; // Upcounter
+    *TIM3_CNT = 0;
+    *TIM3_PSC = 7200; // 10Khz
+    *TIM3_ARR = 10000; // 1Hz
+    TIM3_DIER->UIE = true; // TIM3 interrupt enable
+    TIM3_CR1->CEN = true; // Enable counter
+}
+
+void TIM3_ISR(void)
+{
+    /* blink_advance_phase(); */
+    TIM3_SR->UIF = false;
 }
 
 const EYE_t eye_normal = {
