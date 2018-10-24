@@ -6,7 +6,7 @@
 #define PITCH_INIT_VAL 1100
 #define YAW_INIT_VAL   1400
 
-void movement_init()
+void motion_init()
 {
     // 50Hz carrier; 1ms - 2ms duty cycle
     RCC_APB1ENR->TIM4EN = true;

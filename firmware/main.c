@@ -18,7 +18,7 @@ int main(void)
     rcc_setup_in_8mhz_hse_out_72mhz();
     usart_init_72mhz_9600baud();
     eyes_init();
-    movement_init();
+    motion_init();
 
     RCC_APB2ENR->IOPCEN = true;
     PORTC->MODE13 = MODE_OUTPUT_50MHZ;
