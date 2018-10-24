@@ -20,8 +20,6 @@ int main(void)
     eyes_init();
     movement_init();
 
-    /* select_eyes(eye_surprised, eye_surprised); */
-
     RCC_APB2ENR->IOPCEN = true;
     PORTC->MODE13 = MODE_OUTPUT_50MHZ;
     PORTC->CNF13 = CNF_OUT_PUSH_PULL;
@@ -53,14 +51,27 @@ int main(void)
             step_right();
             PORTC->ODR13 ^= true;
         }
-        else if ((char) c == 'c')
+
+        else if ((char) c == 'H')
         {
             select_eyes(eye_happy, eye_happy);
         }
-        else if ((char) c == 'C')
+
+        else if ((char) c == 'n')
         {
             select_eyes(eye_normal, eye_normal);
         }
+
+        else if ((char) c == 's')
+        {
+            select_eyes(eye_smile, eye_smile);
+        }
+
+        else if ((char) c == 'S')
+        {
+            select_eyes(eye_sad_up_left, eye_sad_up_right);
+        }
+
     }
 }
 
