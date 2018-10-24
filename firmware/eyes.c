@@ -19,7 +19,7 @@ static EYE_t* CURRENT_RIGHT_EYE;
 void eyes_init(void)
 {
     video_init();
-    setup_blink_interval_timer();
+    start_blinking();
     select_eyes(DEFAULT_LEFT_EYE, DEFAULT_RIGHT_EYE);
 }
 
@@ -36,22 +36,7 @@ void select_eyes(EYE_t eye_left, EYE_t eye_right)
         memset(fb_ptr++, vec2byte(eye_left[i]), 1);
     }
 
-    blink();
-}
-
-void blink(void)
-{
-    restart_blinking();
-    BLINKING = true;
     start_blink_animation();
-}
-
-void restart_blinking(void)
-{
-    TIM3_CR1->CEN = false;
-    CURRENT_BLINK_PHASE = 0;
-    BLINKING = false;
-    setup_blink_interval_timer();
 }
 
 void blink_advance_phase(void)
@@ -112,7 +97,7 @@ void blink_advance_phase(void)
         case 9:
             FRAME_BUFFER[0] = FRAME_BUFFER_SECONDARY[0];
             FRAME_BUFFER[7] = FRAME_BUFFER_SECONDARY[7];
-            restart_blinking();
+            start_blinking();
             break;
     }
 }
@@ -136,9 +121,15 @@ void start_blink_animation(void)
     TIM3_CR1->CEN = true; // Enable counter
 }
 
-void setup_blink_interval_timer(void)
+void start_blinking(void)
 {
+    TIM3_CR1->CEN = false;
+    BLINKING = false;
+    CURRENT_BLINK_PHASE = 0;
+
     int rand_interval = (rand() % (10 + 1 - 2)) + 2;
+
+    // Setup timer
     __enable_irq();
     NVIC_EnableIRQ(TIM3_IRQ);
     NVIC_SetPriority(TIM3_IRQ, 1);
