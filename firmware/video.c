@@ -8,7 +8,7 @@
 #define REFRESH_RATE_HZ  350
 
 uint16_t FRAME_BUFFER[8] = {0};
-uint16_t FRAME_BUFFER_BACKUP[8] = {0};
+uint16_t FRAME_BUFFER_SECONDARY[8] = {0};
 static uint8_t CURRENT_ROW = 0;
 
 void setup_timer(void);
@@ -35,7 +35,7 @@ void video_init(void)
 
 void backup_frame_buffer(void)
 {
-    memcpy(FRAME_BUFFER_BACKUP, FRAME_BUFFER, sizeof(FRAME_BUFFER));
+    memcpy(FRAME_BUFFER_SECONDARY, FRAME_BUFFER, sizeof(FRAME_BUFFER));
 }
 
 void render()

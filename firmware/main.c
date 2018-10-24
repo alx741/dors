@@ -20,7 +20,7 @@ int main(void)
     eyes_init();
     movement_init();
 
-    select_eyes(eye_surprised, eye_surprised);
+    /* select_eyes(eye_surprised, eye_surprised); */
 
     RCC_APB2ENR->IOPCEN = true;
     PORTC->MODE13 = MODE_OUTPUT_50MHZ;
@@ -52,6 +52,14 @@ int main(void)
         {
             step_right();
             PORTC->ODR13 ^= true;
+        }
+        else if ((char) c == 'c')
+        {
+            select_eyes(eye_happy, eye_happy);
+        }
+        else if ((char) c == 'C')
+        {
+            select_eyes(eye_normal, eye_normal);
         }
     }
 }
