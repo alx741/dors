@@ -20,7 +20,7 @@ int main(void)
     eyes_init();
     movement_init();
 
-    select_eyes(eye_smile, eye_smile);
+    select_eyes(eye_surprised, eye_surprised);
 
     RCC_APB2ENR->IOPCEN = true;
     PORTC->MODE13 = MODE_OUTPUT_50MHZ;
@@ -53,17 +53,6 @@ int main(void)
             step_right();
             PORTC->ODR13 ^= true;
         }
-        else if ((char) c == 'b')
-        {
-            /* printf("fb size: %d\n\n", sizeof(FRAME_BUFFER)); */
-            blink();
-        }
-        else if ((char) c == 'B')
-        {
-            /* printf("fb size: %d\n\n", sizeof(FRAME_BUFFER)); */
-            /* unblink(); */
-        }
-
     }
 }
 

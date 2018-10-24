@@ -4,14 +4,19 @@
 #include <rcc.h>
 #include <cmsis.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 static uint8_t CURRENT_BLINK_PHASE = 0;
+static bool BLINKING = false;
+
 static EYE_t* CURRENT_LEFT_EYE;
 static EYE_t* CURRENT_RIGHT_EYE;
 
 void eyes_init(void)
 {
     video_init();
+    setup_blink_interval_timer();
 }
 
 void select_eyes(EYE_t eye_left, EYE_t eye_right)
@@ -32,14 +37,10 @@ void blink(void)
 {
     if (CURRENT_BLINK_PHASE == 0)
     {
+        BLINKING = true;
         backup_frame_buffer();
-        /* setup_blink_timer(); */
+        setup_blink_animation_timer();
     }
-    blink_advance_phase();
-    /* else if (CURRENT_RIGHT_EYE == 10) */
-    /* { */
-    /*     TIM3_CR1->CEN = false; // Disable counter */
-    /* } */
 }
 
 void blink_advance_phase(void)
@@ -100,13 +101,16 @@ void blink_advance_phase(void)
         case 9:
             FRAME_BUFFER[0] = FRAME_BUFFER_BACKUP[0];
             FRAME_BUFFER[7] = FRAME_BUFFER_BACKUP[7];
+            TIM3_CR1->CEN = false; // Disable counter
             CURRENT_BLINK_PHASE = 0;
+            BLINKING = false;
+            setup_blink_interval_timer();
             break;
     }
 }
 
 
-void setup_blink_timer(void)
+void setup_blink_animation_timer(void)
 {
     __enable_irq();
     NVIC_EnableIRQ(TIM3_IRQ);
@@ -115,14 +119,38 @@ void setup_blink_timer(void)
     TIM3_CR1->DIR = false; // Upcounter
     *TIM3_CNT = 0;
     *TIM3_PSC = 7200; // 10Khz
-    *TIM3_ARR = 10000; // 1Hz
+    *TIM3_ARR = 200; // 50Hz
+    TIM3_DIER->UIE = true; // TIM3 interrupt enable
+    TIM3_CR1->CEN = true; // Enable counter
+}
+
+void setup_blink_interval_timer(void)
+{
+    int rand_interval = (rand() % (10 + 1 - 2)) + 2;
+    __enable_irq();
+    NVIC_EnableIRQ(TIM3_IRQ);
+    NVIC_SetPriority(TIM3_IRQ, 1);
+    RCC_APB1ENR->TIM3EN = true;
+    TIM3_CR1->DIR = false; // Upcounter
+    *TIM3_CNT = 0;
+    *TIM3_PSC = 60000; // 1.2Khz
+    *TIM3_ARR = rand_interval * 6000;
     TIM3_DIER->UIE = true; // TIM3 interrupt enable
     TIM3_CR1->CEN = true; // Enable counter
 }
 
 void TIM3_ISR(void)
 {
-    /* blink_advance_phase(); */
+    if (BLINKING)
+    {
+        blink_advance_phase();
+    }
+    else
+    {
+        TIM3_CR1->CEN = false; // Disable counter
+        blink();
+    }
+
     TIM3_SR->UIF = false;
 }
 
