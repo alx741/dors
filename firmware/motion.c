@@ -12,10 +12,14 @@ void motion_init()
     RCC_APB1ENR->TIM4EN = true;
     RCC_APB2ENR->IOPBEN = true;
     RCC_APB2ENR->AFIOEN = true;
+    PORTB->MODE5 = MODE_OUTPUT_50MHZ;
+    PORTB->CNF5 = CNF_OUT_PUSH_PULL;
     PORTB->MODE6 = MODE_OUTPUT_50MHZ;
     PORTB->CNF6 = CNF_ALTERNATE_PUSH_PULL;
     PORTB->MODE7 = MODE_OUTPUT_50MHZ;
     PORTB->CNF7 = CNF_ALTERNATE_PUSH_PULL;
+
+    PORTB->ODR5 = true; // Deactivate yaw
 
     TIM4_CR1->CKD  = 0b00; // No clock division
     TIM4_CR1->CMS  = 0b00; // Edge aligned mode
@@ -45,12 +49,22 @@ void motion_init()
     TIM4_CR1->CEN = true; // Counter enable
 }
 
+void sleep()
+{
+    int dummy=0;
+    for (int i=0; i<150000; i++)
+    {
+        dummy++;
+    }
+}
+
+
 void step_left()
 {
     int current = *TIM4_CCR2;
     if (current > 1000)
     {
-        *TIM4_CCR2 = current - 20;
+        *TIM4_CCR2 = current - 30;
     }
 }
 
@@ -59,7 +73,7 @@ void step_right()
     int current = *TIM4_CCR2;
     if (current < 1800)
     {
-        *TIM4_CCR2 = current + 20;
+        *TIM4_CCR2 = current + 30;
     }
 }
 
@@ -68,7 +82,7 @@ void step_down()
     int current = *TIM4_CCR1;
     if (current > 800)
     {
-        *TIM4_CCR1 = current - 20;
+        *TIM4_CCR1 = current - 30;
     }
 }
 
@@ -77,6 +91,6 @@ void step_up()
     int current = *TIM4_CCR1;
     if (current < 1600)
     {
-        *TIM4_CCR1 = current + 20;
+        *TIM4_CCR1 = current + 30;
     }
 }

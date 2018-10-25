@@ -72,6 +72,11 @@ int main(void)
             select_eyes(eye_sad_up_left, eye_sad_up_right);
         }
 
+        else if ((char) c == 'i')
+        {
+            PORTB->ODR5 ^= true;
+        }
+
     }
 }
 
