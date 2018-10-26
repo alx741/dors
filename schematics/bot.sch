@@ -1,39 +1,6 @@
-EESchema Schematic File Version 2
-LIBS:power
-LIBS:device
-LIBS:switches
-LIBS:relays
-LIBS:motors
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:microcontrollers
-LIBS:xilinx
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:MCU_ST_STM32F1
+EESchema Schematic File Version 4
 LIBS:bot-cache
-EELAYER 25 0
+EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -48,7 +15,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L 74HC595 U?
+L bot-rescue:74HC595 U?
 U 1 1 5B12EF0E
 P 3900 1800
 F 0 "U?" H 4050 2400 50  0000 C CNN
@@ -59,7 +26,7 @@ F 3 "" H 3900 1800 50  0001 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 74HC595 U?
+L bot-rescue:74HC595 U?
 U 1 1 5B12EFD5
 P 3900 3250
 F 0 "U?" H 4050 3850 50  0000 C CNN
@@ -76,7 +43,7 @@ Wire Wire Line
 Wire Wire Line
 	4600 2550 4600 2800
 $Comp
-L +3.3V #PWR?
+L power:+3.3V #PWR?
 U 1 1 5B12F1E6
 P 4600 1650
 F 0 "#PWR?" H 4600 1500 50  0001 C CNN
@@ -87,7 +54,7 @@ F 3 "" H 4600 1650 50  0001 C CNN
 	0    1    -1   0   
 $EndComp
 $Comp
-L +3.3V #PWR?
+L power:+3.3V #PWR?
 U 1 1 5B12F222
 P 4600 3100
 F 0 "#PWR?" H 4600 2950 50  0001 C CNN
@@ -98,25 +65,25 @@ F 3 "" H 4600 3100 50  0001 C CNN
 	0    1    -1   0   
 $EndComp
 Wire Wire Line
-	4600 1550 6950 1550
+	4600 1550 4850 1550
 Wire Wire Line
-	4850 1550 4850 6250
+	4850 1550 4850 3000
 Wire Wire Line
 	4850 3000 4600 3000
 Wire Wire Line
-	4600 1850 7000 1850
+	4600 1850 5000 1850
 Wire Wire Line
-	5000 1850 5000 6550
+	5000 1850 5000 3300
 Wire Wire Line
 	5000 3300 4600 3300
 Wire Wire Line
-	4600 1950 6850 1950
+	4600 1950 5150 1950
 Wire Wire Line
-	5150 1950 5150 6650
+	5150 1950 5150 3400
 Wire Wire Line
 	5150 3400 4600 3400
 $Comp
-L Conn_01x16_Male J?
+L bot-rescue:Conn_01x16_Male J?
 U 1 1 5B12FAF9
 P 1850 1950
 F 0 "J?" H 1850 2750 50  0000 C CNN
@@ -127,7 +94,7 @@ F 3 "" H 1850 1950 50  0001 C CNN
 	1    0    0    1   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B12FE45
 P 2200 1150
 F 0 "R?" V 2280 1150 50  0000 C CNN
@@ -138,7 +105,7 @@ F 3 "" H 2200 1150 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B12FF9A
 P 2200 2450
 F 0 "R?" V 2280 2450 50  0000 C CNN
@@ -149,7 +116,7 @@ F 3 "" H 2200 2450 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B130113
 P 2200 2150
 F 0 "R?" V 2280 2150 50  0000 C CNN
@@ -160,7 +127,7 @@ F 3 "" H 2200 2150 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B130193
 P 2200 1750
 F 0 "R?" V 2280 1750 50  0000 C CNN
@@ -171,7 +138,7 @@ F 3 "" H 2200 1750 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B130246
 P 2200 1650
 F 0 "R?" H 2280 1650 50  0000 C CNN
@@ -182,7 +149,7 @@ F 3 "" H 2200 1650 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B130303
 P 2200 1450
 F 0 "R?" V 2280 1450 50  0000 C CNN
@@ -193,7 +160,7 @@ F 3 "" H 2200 1450 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B13035F
 P 2200 1250
 F 0 "R?" V 2280 1250 50  0000 C CNN
@@ -300,7 +267,7 @@ Wire Wire Line
 Wire Wire Line
 	2600 3500 3200 3500
 $Comp
-L 74HC595 U?
+L bot-rescue:74HC595 U?
 U 1 1 5B132614
 P 3900 5050
 F 0 "U?" H 4050 5650 50  0000 C CNN
@@ -311,7 +278,7 @@ F 3 "" H 3900 5050 50  0001 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 74HC595 U?
+L bot-rescue:74HC595 U?
 U 1 1 5B13261A
 P 3900 6500
 F 0 "U?" H 4050 7100 50  0000 C CNN
@@ -328,7 +295,7 @@ Wire Wire Line
 Wire Wire Line
 	4600 5800 4600 6050
 $Comp
-L +3.3V #PWR?
+L power:+3.3V #PWR?
 U 1 1 5B132623
 P 4600 4900
 F 0 "#PWR?" H 4600 4750 50  0001 C CNN
@@ -339,7 +306,7 @@ F 3 "" H 4600 4900 50  0001 C CNN
 	0    1    -1   0   
 $EndComp
 $Comp
-L +3.3V #PWR?
+L power:+3.3V #PWR?
 U 1 1 5B132629
 P 4600 6350
 F 0 "#PWR?" H 4600 6200 50  0001 C CNN
@@ -362,7 +329,7 @@ Wire Wire Line
 Wire Wire Line
 	5150 6650 4600 6650
 $Comp
-L Conn_01x16_Male J?
+L bot-rescue:Conn_01x16_Male J?
 U 1 1 5B132638
 P 1850 5200
 F 0 "J?" H 1850 6000 50  0000 C CNN
@@ -373,7 +340,7 @@ F 3 "" H 1850 5200 50  0001 C CNN
 	1    0    0    1   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B13263E
 P 2200 4400
 F 0 "R?" V 2280 4400 50  0000 C CNN
@@ -384,7 +351,7 @@ F 3 "" H 2200 4400 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B132644
 P 2200 5700
 F 0 "R?" V 2280 5700 50  0000 C CNN
@@ -395,7 +362,7 @@ F 3 "" H 2200 5700 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B13264A
 P 2200 5400
 F 0 "R?" V 2280 5400 50  0000 C CNN
@@ -406,7 +373,7 @@ F 3 "" H 2200 5400 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B132650
 P 2200 5000
 F 0 "R?" V 2280 5000 50  0000 C CNN
@@ -417,7 +384,7 @@ F 3 "" H 2200 5000 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B132656
 P 2200 4900
 F 0 "R?" H 2280 4900 50  0000 C CNN
@@ -428,7 +395,7 @@ F 3 "" H 2200 4900 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B13265C
 P 2200 4700
 F 0 "R?" V 2280 4700 50  0000 C CNN
@@ -439,7 +406,7 @@ F 3 "" H 2200 4700 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R R?
+L bot-rescue:R R?
 U 1 1 5B132662
 P 2200 4500
 F 0 "R?" V 2280 4500 50  0000 C CNN
@@ -558,7 +525,7 @@ Connection ~ 5000 3300
 Connection ~ 5150 5200
 Connection ~ 5150 3400
 $Comp
-L STM32F103C8Tx U?
+L MCU_ST_STM32F1:STM32F103C8Tx U?
 U 1 1 5B1300F7
 P 7800 3350
 F 0 "U?" H 7200 4800 50  0000 L CNN
@@ -569,7 +536,7 @@ F 3 "" H 7800 3350 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L +3.3V #PWR?
+L power:+3.3V #PWR?
 U 1 1 5B130C16
 P 7700 1850
 F 0 "#PWR?" H 7700 1700 50  0001 C CNN
@@ -580,7 +547,7 @@ F 3 "" H 7700 1850 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR?
+L power:GND #PWR?
 U 1 1 5B13112B
 P 7600 4850
 F 0 "#PWR?" H 7600 4600 50  0001 C CNN
@@ -611,4 +578,22 @@ Wire Wire Line
 Wire Wire Line
 	7000 3450 7000 1850
 Connection ~ 5000 1850
+Wire Wire Line
+	4850 4800 4850 6250
+Wire Wire Line
+	4850 3000 4850 4800
+Wire Wire Line
+	5000 5100 5000 6550
+Wire Wire Line
+	5000 3300 5000 5100
+Wire Wire Line
+	5150 5200 5150 6650
+Wire Wire Line
+	5150 3400 5150 5200
+Wire Wire Line
+	5150 1950 6850 1950
+Wire Wire Line
+	4850 1550 6950 1550
+Wire Wire Line
+	5000 1850 7000 1850
 $EndSCHEMATC
