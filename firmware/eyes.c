@@ -10,8 +10,8 @@
 static uint8_t CURRENT_BLINK_PHASE = 0;
 static bool BLINKING = false;
 
-static EYE_t* DEFAULT_LEFT_EYE  = eye_normal;
-static EYE_t* DEFAULT_RIGHT_EYE = eye_normal;
+static EYE_t* DEFAULT_LEFT_EYE  = eye_neutral;
+static EYE_t* DEFAULT_RIGHT_EYE = eye_neutral;
 
 static EYE_t* CURRENT_LEFT_EYE;
 static EYE_t* CURRENT_RIGHT_EYE;
@@ -156,7 +156,7 @@ void TIM3_ISR(void)
     TIM3_SR->UIF = false;
 }
 
-const EYE_t eye_normal = {
+const EYE_t eye_neutral = {
       { 0,0,0,0,0,0,0,0 }
     , { 0,0,1,1,1,1,0,0 }
     , { 0,1,1,1,1,1,1,0 }

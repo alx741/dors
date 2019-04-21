@@ -11,7 +11,7 @@ void select_eyes(EYE_t eye_left, EYE_t eye_right);
 /*
  * Available eyes
  */
-const EYE_t eye_normal;
+const EYE_t eye_neutral;
 const EYE_t eye_happy;
 const EYE_t eye_smile;
 const EYE_t eye_blink;
