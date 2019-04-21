@@ -2,13 +2,22 @@
 #include "emotion.h"
 #include "motion.h"
 #include <f1.h>
+#include <usart.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include "eyes.h"
 #include "motion.h"
 
+
 #define COMMAND_PROMPT '>'
+
+/* Available commands */
+#define SET_EYES    0x00
+#define MOVE_HEAD   0x01
+#define SET_EMOTION 0x02
+
 
 typedef struct
 {
@@ -16,11 +25,6 @@ typedef struct
     unsigned         : 2;
     unsigned CMD     : 2;
 } COMMAND_t;
-
-/* Available commands */
-#define SET_EYES    0x00
-#define MOVE_HEAD   0x01
-#define SET_EMOTION 0x02
 
 void command_init()
 {
@@ -44,74 +48,42 @@ COMMAND_t read_command(int c)
 
 COMMAND_t receive_command()
 {
-    int c = getchar();
-    return read_command(c);
-    int c = 0b01010011;
-    return read_command(c);
+    return read_command(getchar());
 }
 
 void execute_command(COMMAND_t c)
 {
+    switch (c.CMD)
+    {
+        case SET_EYES:
+            switch (c.EMO_DIR)
+            {
+                case NEUTRAL:
+                select_eyes(eye_neutral, eye_neutral);
+                break;
+
+                case HAPPY:
+                select_eyes(eye_happy, eye_happy);
+                break;
+
+                case SAD:
+                select_eyes(eye_sad_up_left, eye_sad_up_right);
+                break;
+            }
+            break;
+
+    }
+
     PORTC->ODR13 ^= true;
     return;
 }
 
 void command_loop()
 {
-    int c;
     while (1)
     {
-        putchar('\n');
         putchar(COMMAND_PROMPT);
         COMMAND_t cmd = receive_command();
         execute_command(cmd);
-        c = getchar();
-
-        if ((char) c == 'j')
-        {
-            step(DOWN);
-            PORTC->ODR13 ^= true;
-        }
-        else if ((char) c == 'k')
-        {
-            step(UP);
-            PORTC->ODR13 ^= true;
-        }
-        else if ((char) c == 'h')
-        {
-            step(LEFT);
-            PORTC->ODR13 ^= true;
-        }
-        else if ((char) c == 'l')
-        {
-            step(RIGHT);
-            PORTC->ODR13 ^= true;
-        }
-
-        else if ((char) c == 'H')
-        {
-            select_eyes(eye_happy, eye_happy);
-        }
-
-        else if ((char) c == 'n')
-        {
-            select_eyes(eye_normal, eye_normal);
-        }
-
-        else if ((char) c == 's')
-        {
-            select_eyes(eye_smile, eye_smile);
-        }
-
-        else if ((char) c == 'S')
-        {
-            select_eyes(eye_sad_up_left, eye_sad_up_right);
-        }
-
-        else if ((char) c == 'i')
-        {
-            PORTB->ODR5 ^= true;
-        }
-
     }
 }
