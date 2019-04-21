@@ -66,6 +66,10 @@ void step(DIRECTION_t d)
             step_right();
             break;
     }
+
+#ifdef DEBUG
+    printf("pitch: %d\tyaw: %d\n\n", *TIM4_CCR1, *TIM4_CCR2);
+#endif
 }
 
 void step_left()
