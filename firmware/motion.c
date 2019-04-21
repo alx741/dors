@@ -49,15 +49,24 @@ void motion_init()
     TIM4_CR1->CEN = true; // Counter enable
 }
 
-void sleep()
+void step(DIRECTION_t d)
 {
-    int dummy=0;
-    for (int i=0; i<150000; i++)
+    switch (d)
     {
-        dummy++;
+        case UP:
+            step_up();
+            break;
+        case DOWN:
+            step_down();
+            break;
+        case LEFT:
+            step_left();
+            break;
+        case RIGHT:
+            step_right();
+            break;
     }
 }
-
 
 void step_left()
 {
