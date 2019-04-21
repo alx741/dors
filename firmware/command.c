@@ -60,6 +60,10 @@ void execute_command(COMMAND_t c)
         case MOVE_HEAD:
             step(c.EMO_DIR);
             break;
+
+        case SET_EMOTION:
+            // TODO
+            break;
     }
 
     PORTC->ODR13 ^= true;

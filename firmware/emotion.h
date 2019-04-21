@@ -12,6 +12,6 @@ void convey_emotion(EMOTION_t e);
 #define NEUTRAL    0x05
 #define SAD        0x06
 #define SLEEPY     0x07
-#define SMILEY      0x08
+#define SMILEY     0x08
 #define SURPRISED  0x09
 #define SUSPICIOUS 0x0A
