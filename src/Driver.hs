@@ -1,16 +1,23 @@
-module Driver where
+module Driver
+    ( robot
+    , Command(..)
+    , Emotion(..)
+    , Direction(..)
+    ) where
 
 import Control.Monad              (unless)
+import Data.Bits
 import Data.ByteString            as BS (singleton)
 import Data.ByteString.Char8      as BSC8 (pack)
 import Data.Word                  (Word8)
+import Prelude                    hiding (Left, Right)
 import System.Hardware.Serialport
 
 port :: String
 port = "/dev/ttyUSB0"
 
 robot :: Command -> IO ()
-robot = undefined
+robot = sendCommand . renderCommand
 
 data Command
     = SetEyes    Emotion
@@ -35,12 +42,6 @@ data Emotion
 
 type RawCommand = Word8
 
-hardwareExecute :: Command -> IO ()
-hardwareExecute = sendCommand . renderCommand
-
-renderCommand :: Command -> RawCommand
-renderCommand = undefined
-
 sendCommand :: RawCommand -> IO ()
 sendCommand cmd = do
     sp <-
@@ -57,3 +58,25 @@ sendCommand cmd = do
         waitHardware sp = do
             char <- recv sp 1
             unless (BSC8.pack ">" == char) $ waitHardware sp
+
+
+class RenderCommand a where
+    renderCommand :: a -> RawCommand
+
+instance RenderCommand Command where
+    renderCommand (SetEyes a)    = 0x00 .|. shift (renderCommand a) 4
+    renderCommand (MoveHead a)   = 0x01 .|. shift (renderCommand a) 4
+    renderCommand (SetEmotion a) = 0x02 .|. shift (renderCommand a) 4
+
+instance RenderCommand Emotion where
+    renderCommand Neutral   = 0x01
+    renderCommand Happy     = 0x02
+    renderCommand Sad       = 0x03
+    renderCommand Surprised = 0x04
+    renderCommand Bored     = 0x05
+
+instance RenderCommand Direction where
+    renderCommand Up    = 0x01
+    renderCommand Down  = 0x02
+    renderCommand Left  = 0x03
+    renderCommand Right = 0x04
