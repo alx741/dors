@@ -1,11 +1,11 @@
 #include "eyes.h"
 #include "motion.h"
+#include "command.h"
 #include <f1.h>
 #include <rcc.h>
 #include <usart.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 
 void delay(void);
 

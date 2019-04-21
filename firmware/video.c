@@ -4,6 +4,7 @@
 #include <rcc.h>
 #include <cmsis.h>
 #include <stdint.h>
+#include <string.h>
 
 #define REFRESH_RATE_HZ  350
 
