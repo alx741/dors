@@ -4,3 +4,7 @@
 
 artwork/*.png
 design/*~
+
+.stack-work/
+dors.cabal
+*~
