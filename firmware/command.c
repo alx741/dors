@@ -76,16 +76,44 @@ void set_eyes_emotion(uint8_t emotion)
 {
     switch (emotion)
     {
-        case NEUTRAL:
-        select_eyes(eye_neutral, eye_neutral);
+        case ANGRY:
+        select_eyes(eye_angry_left, eye_angry_right);
+        break;
+
+        case BORED:
+        select_eyes(eye_bored, eye_bored);
+        break;
+
+        case CONFUSED:
+        select_eyes(eye_confused_left, eye_confused_right);
         break;
 
         case HAPPY:
         select_eyes(eye_happy, eye_happy);
         break;
 
+        case NEUTRAL:
+        select_eyes(eye_neutral, eye_neutral);
+        break;
+
         case SAD:
         select_eyes(eye_sad_up_left, eye_sad_up_right);
+        break;
+
+        case SLEEPY:
+        select_eyes(eye_sleepy, eye_sleepy);
+        break;
+
+        case SMILEY:
+        select_eyes(eye_smile, eye_smile);
+        break;
+
+        case SURPRISED:
+        select_eyes(eye_surprised, eye_surprised);
+        break;
+
+        case SUSPICIOUS:
+        select_eyes(eye_squint, eye_squint);
         break;
     }
 }
