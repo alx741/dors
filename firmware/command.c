@@ -31,11 +31,12 @@ COMMAND_t read_command(int c)
 {
     COMMAND_t cmd;
     cmd.CMD     = 0x03 & c;
-    cmd.EMO_DIR = 0xF0 & c;
+    cmd.EMO_DIR = (0xF0 & c) >> 4;
 
 #ifdef DEBUG
     printf("int: %x\n\n", c);
-    printf("cmd: %x\n\n", cmd);
+    printf("CMD: %x\n\n", cmd.CMD);
+    printf("EMO_DIR: %x\n\n", cmd.EMO_DIR);
 #endif
 
     return cmd;
@@ -44,6 +45,8 @@ COMMAND_t read_command(int c)
 COMMAND_t receive_command()
 {
     int c = getchar();
+    return read_command(c);
+    int c = 0b01010011;
     return read_command(c);
 }
 
