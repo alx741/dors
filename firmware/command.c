@@ -1,14 +1,12 @@
 #include "command.h"
 #include "emotion.h"
+#include "eyes.h"
 #include "motion.h"
 #include <f1.h>
 #include <usart.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <stdio.h>
-
-#include "eyes.h"
-#include "motion.h"
 
 
 #define COMMAND_PROMPT '>'
@@ -56,22 +54,8 @@ void execute_command(COMMAND_t c)
     switch (c.CMD)
     {
         case SET_EYES:
-            switch (c.EMO_DIR)
-            {
-                case NEUTRAL:
-                select_eyes(eye_neutral, eye_neutral);
-                break;
-
-                case HAPPY:
-                select_eyes(eye_happy, eye_happy);
-                break;
-
-                case SAD:
-                select_eyes(eye_sad_up_left, eye_sad_up_right);
-                break;
-            }
+            set_eyes_emotion(c.EMO_DIR);
             break;
-
     }
 
     PORTC->ODR13 ^= true;
@@ -85,5 +69,23 @@ void command_loop()
         putchar(COMMAND_PROMPT);
         COMMAND_t cmd = receive_command();
         execute_command(cmd);
+    }
+}
+
+void set_eyes_emotion(uint8_t emotion)
+{
+    switch (emotion)
+    {
+        case NEUTRAL:
+        select_eyes(eye_neutral, eye_neutral);
+        break;
+
+        case HAPPY:
+        select_eyes(eye_happy, eye_happy);
+        break;
+
+        case SAD:
+        select_eyes(eye_sad_up_left, eye_sad_up_right);
+        break;
     }
 }
