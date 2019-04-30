@@ -22,6 +22,10 @@ dependencies:
 - base >= 4.7 && < 5
 - serialport
 - bytestring
+- text
+- vector
+- cassava
+- probability
 
 library:
   source-dirs: src
