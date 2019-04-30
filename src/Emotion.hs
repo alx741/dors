@@ -10,17 +10,19 @@ import           Data.Vector                      as V
 import           Numeric.Probability.Distribution as P
 import           Prelude                          hiding (Word)
 
-type Lexicon prob = HashMap Stem (P.T prob Emotion)
+type Lexicon = HashMap Stem EmotionalDistribution
+type EmotionalDistribution = P.T Double Emotion
 type Stem = Text
 
--- wordEmotionalDistribution :: Text -> P.T prob Emotion
+wordEmotionalDistribution :: Text -> P.T prob Emotion
+wordEmotionalDistribution = undefined
 -- wordEmotionalDistribution = stem
 
-loadLexicon :: Fractional prob => FilePath -> IO (Lexicon prob)
+loadLexicon :: FilePath -> IO Lexicon
 loadLexicon fp = decode HasHeader <$> LBS.readFile fp >>= either error (pure . vecToLexicon)
     where
-         vecToLexicon :: Vector (Word prob) -> Lexicon prob
-         vecToLexicon = HM.fromList . fmap (\w -> (stem w, emotionDistribution w)) . V.toList
+         vecToLexicon :: Vector (Word Double) -> Lexicon
+         vecToLexicon = HM.fromList . fmap (\w -> (stem w, emotionalDist w)) . V.toList
 
 data Emotion
     = Anticipation
@@ -37,8 +39,8 @@ data Emotion
     deriving (Show, Eq, Ord, Enum)
 
 data Word prob = Word
-    { stem                :: !Text
-    , emotionDistribution :: P.T prob Emotion
+    { stem          :: !Text
+    , emotionalDist :: EmotionalDistribution
     } deriving (Show)
 
 instance Fractional prob => FromRecord (Word prob) where
