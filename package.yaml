@@ -26,6 +26,7 @@ dependencies:
 - vector
 - cassava
 - probability
+- unordered-containers
 
 library:
   source-dirs: src
