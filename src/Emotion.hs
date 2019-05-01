@@ -27,7 +27,7 @@ instance Semigroup EmotionalDistribution where
             unsafeLookup x = fromJust . Prelude.lookup x
 
 instance Monoid EmotionalDistribution where
-    mempty = P.enum (Prelude.replicate 11 0) (enumFrom Anticipation)
+    mempty = P.uniform (enumFrom Anticipation)
 
 utteranceEmotionalDist :: Text -> Lexicon -> EmotionalDistribution
 utteranceEmotionalDist t l = fold $ unMaybe $ flip wordEmotionalDist l <$> words t
