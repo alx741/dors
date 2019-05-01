@@ -8,6 +8,7 @@ import qualified Data.ByteString.Lazy             as LBS
 import           Data.Csv
 import           Data.Foldable                    (fold)
 import           Data.HashMap.Strict              as HM
+import           Data.List                        (maximumBy)
 import           Data.Maybe                       (fromJust, isJust)
 import           Data.Text
 import           Data.Vector                      as V
@@ -63,7 +64,7 @@ stem :: Text -> Text
 stem = id
 
 argmax :: EmotionalDistribution -> Emotion
-argmax = undefined
+argmax e = fst $ Data.List.maximumBy (\p1 p2 -> compare (snd p1) (snd p2)) $ decons e
 
 loadLexiconFile :: FilePath -> IO Lexicon
 loadLexiconFile fp = decode HasHeader <$> LBS.readFile fp >>= either error (pure . vecToLexicon)
