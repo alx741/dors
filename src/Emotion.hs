@@ -26,6 +26,9 @@ instance Semigroup EmotionalDistribution where
             unsafeLookup :: Eq a => a -> [(a, b)] -> b
             unsafeLookup x = fromJust . Prelude.lookup x
 
+instance Monoid EmotionalDistribution where
+    mempty = P.enum (Prelude.replicate 11 0) (enumFrom Anticipation)
+
 loadLexiconFile :: FilePath -> IO Lexicon
 loadLexiconFile fp = decode HasHeader <$> LBS.readFile fp >>= either error (pure . vecToLexicon)
     where
