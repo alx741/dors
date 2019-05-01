@@ -29,6 +29,18 @@ instance Semigroup EmotionalDistribution where
 instance Monoid EmotionalDistribution where
     mempty = P.enum (Prelude.replicate 11 0) (enumFrom Anticipation)
 
+utteranceEmotionalDist :: Text -> Lexicon -> EmotionalDistribution
+utteranceEmotionalDist t l = fold $ unMaybe $ flip wordEmotionalDist l <$> words t
+    where
+        unMaybe :: [Maybe a] -> [a]
+        unMaybe = fmap fromJust . Prelude.filter isJust
+
+wordEmotionalDist :: Text -> Lexicon -> Maybe EmotionalDistribution
+wordEmotionalDist = HM.lookup . stem . strip
+
+stem :: Text -> Text
+stem = undefined
+
 loadLexiconFile :: FilePath -> IO Lexicon
 loadLexiconFile fp = decode HasHeader <$> LBS.readFile fp >>= either error (pure . vecToLexicon)
     where
