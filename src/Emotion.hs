@@ -10,42 +10,13 @@ import           Data.Foldable                    (fold)
 import           Data.HashMap.Strict              as HM
 import           Data.Maybe                       (fromJust, isJust)
 import           Data.Text
-import           Data.Vector                      as V hiding (head)
+import           Data.Vector                      as V
 import           Numeric.Probability.Distribution as P
 import           Prelude                          hiding (Word, words)
 
 type Lexicon = HashMap Stem EmotionalDistribution
 type EmotionalDistribution = P.T Double Emotion
 type Stem = Text
-
-instance Semigroup EmotionalDistribution where
-    (<>) a b = fromFreqs $ fmap (\(e, p) -> (e, (p + unsafeLookup e a')/2)) b'
-        where
-            a' = decons a
-            b' = decons b
-            unsafeLookup :: Eq a => a -> [(a, b)] -> b
-            unsafeLookup x = fromJust . Prelude.lookup x
-
-instance Monoid EmotionalDistribution where
-    mempty = P.uniform (enumFrom Anticipation)
-
-utteranceEmotionalDist :: Text -> Lexicon -> EmotionalDistribution
-utteranceEmotionalDist t l = fold $ unMaybe $ flip wordEmotionalDist l <$> words t
-    where
-        unMaybe :: [Maybe a] -> [a]
-        unMaybe = fmap fromJust . Prelude.filter isJust
-
-wordEmotionalDist :: Text -> Lexicon -> Maybe EmotionalDistribution
-wordEmotionalDist = HM.lookup . stem . strip
-
-stem :: Text -> Text
-stem = undefined
-
-loadLexiconFile :: FilePath -> IO Lexicon
-loadLexiconFile fp = decode HasHeader <$> LBS.readFile fp >>= either error (pure . vecToLexicon)
-    where
-         vecToLexicon :: Vector (Word Double) -> Lexicon
-         vecToLexicon = HM.fromList . fmap (\w -> (wordStem w, emotionalDist w)) . V.toList
 
 data Emotion
     = Anticipation
@@ -60,6 +31,45 @@ data Emotion
     | Negative
     | None
     deriving (Show, Eq, Ord, Enum)
+
+instance Semigroup EmotionalDistribution where
+    (<>) a b = fromFreqs $ fmap (\(e, p) -> (e, (p + unsafeLookup e a')/2)) b'
+        where
+            a' = decons a
+            b' = decons b
+            unsafeLookup :: Eq a => a -> [(a, b)] -> b
+            unsafeLookup x = fromJust . Prelude.lookup x
+
+instance Monoid EmotionalDistribution where
+    mempty = P.uniform (enumFrom Anticipation)
+
+utteranceEmotion :: Text -> Lexicon -> Emotion
+utteranceEmotion t l = argmax $ utteranceEmotionalDist t l
+
+wordEmotion :: Text -> Lexicon -> Maybe Emotion
+wordEmotion t l = argmax <$> wordEmotionalDist t l
+
+utteranceEmotionalDist :: Text -> Lexicon -> EmotionalDistribution
+utteranceEmotionalDist t l = fold $ unMaybe $ flip wordEmotionalDist l <$> words t
+    where
+        unMaybe :: [Maybe a] -> [a]
+        unMaybe = fmap fromJust . Prelude.filter isJust
+
+wordEmotionalDist :: Text -> Lexicon -> Maybe EmotionalDistribution
+wordEmotionalDist = HM.lookup . stem . strip
+
+-- TODO: Implement
+stem :: Text -> Text
+stem = id
+
+argmax :: EmotionalDistribution -> Emotion
+argmax = undefined
+
+loadLexiconFile :: FilePath -> IO Lexicon
+loadLexiconFile fp = decode HasHeader <$> LBS.readFile fp >>= either error (pure . vecToLexicon)
+    where
+         vecToLexicon :: Vector (Word Double) -> Lexicon
+         vecToLexicon = HM.fromList . fmap (\w -> (wordStem w, emotionalDist w)) . V.toList
 
 data Word prob = Word
     { wordStem      :: !Text
