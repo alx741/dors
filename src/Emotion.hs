@@ -1,28 +1,36 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 module Emotion where
 
 import           Control.Monad                    (mzero)
 import qualified Data.ByteString.Char8            as BS
 import qualified Data.ByteString.Lazy             as LBS
 import           Data.Csv
+import           Data.Foldable                    (fold)
 import           Data.HashMap.Strict              as HM
+import           Data.Maybe                       (fromJust, isJust)
 import           Data.Text
-import           Data.Vector                      as V
+import           Data.Vector                      as V hiding (head)
 import           Numeric.Probability.Distribution as P
-import           Prelude                          hiding (Word)
+import           Prelude                          hiding (Word, words)
 
 type Lexicon = HashMap Stem EmotionalDistribution
 type EmotionalDistribution = P.T Double Emotion
 type Stem = Text
 
-wordEmotionalDistribution :: Text -> P.T prob Emotion
-wordEmotionalDistribution = undefined
--- wordEmotionalDistribution = stem
+instance Semigroup EmotionalDistribution where
+    (<>) a b = fromFreqs $ fmap (\(e, p) -> (e, (p + unsafeLookup e a')/2)) b'
+        where
+            a' = decons a
+            b' = decons b
+            unsafeLookup :: Eq a => a -> [(a, b)] -> b
+            unsafeLookup x = fromJust . Prelude.lookup x
 
-loadLexicon :: FilePath -> IO Lexicon
-loadLexicon fp = decode HasHeader <$> LBS.readFile fp >>= either error (pure . vecToLexicon)
+loadLexiconFile :: FilePath -> IO Lexicon
+loadLexiconFile fp = decode HasHeader <$> LBS.readFile fp >>= either error (pure . vecToLexicon)
     where
          vecToLexicon :: Vector (Word Double) -> Lexicon
-         vecToLexicon = HM.fromList . fmap (\w -> (stem w, emotionalDist w)) . V.toList
+         vecToLexicon = HM.fromList . fmap (\w -> (wordStem w, emotionalDist w)) . V.toList
 
 data Emotion
     = Anticipation
@@ -39,7 +47,7 @@ data Emotion
     deriving (Show, Eq, Ord, Enum)
 
 data Word prob = Word
-    { stem          :: !Text
+    { wordStem      :: !Text
     , emotionalDist :: EmotionalDistribution
     } deriving (Show)
 
