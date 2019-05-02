@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-module Emotion where
+module Text.Mining.Emotion where
 
 import           Control.Monad                    (mzero)
 import qualified Data.ByteString.Char8            as BS
@@ -14,6 +14,8 @@ import           Data.Text
 import           Data.Vector                      as V
 import           Numeric.Probability.Distribution as P
 import           Prelude                          hiding (Word, words)
+
+import Text.Mining.Stemming (stem)
 
 type Lexicon = HashMap Stem EmotionalDistribution
 type EmotionalDistribution = P.T Double Emotion
@@ -58,10 +60,6 @@ utteranceEmotionalDist t l = fold $ unMaybe $ flip wordEmotionalDist l <$> words
 
 wordEmotionalDist :: Text -> Lexicon -> Maybe EmotionalDistribution
 wordEmotionalDist = HM.lookup . stem . strip
-
--- TODO: Implement
-stem :: Text -> Text
-stem = id
 
 argmax :: EmotionalDistribution -> Emotion
 argmax e = fst $ Data.List.maximumBy (\p1 p2 -> compare (snd p1) (snd p2)) $ decons e
