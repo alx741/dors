@@ -3,16 +3,15 @@ module Text.Mining.StopWords where
 import           Data.Aeson
 import qualified Data.ByteString.Lazy as LBS
 import           Data.Maybe           (fromJust)
-import           Data.Set
-import           Data.Text
+import           Data.Set             (Set, fromList, member)
+import           Data.Text            as T (Text, unwords, words)
 
 import Text.Clean (removeAccents)
 
 type Lexicon = Set Text
 
--- TODO: Implement
 removeStopWordsOnLexicon :: Lexicon -> Text -> Text
-removeStopWordsOnLexicon = undefined
+removeStopWordsOnLexicon l = T.unwords . filter (`member` l) . T.words
 
 loadLexiconFile :: FilePath -> IO Lexicon
 loadLexiconFile fp
