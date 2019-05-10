@@ -15,7 +15,7 @@ import           Data.Vector                      as V
 import           Numeric.Probability.Distribution as P
 import           Prelude                          hiding (Word, words)
 
-import Text.Mining.Stemming (stem)
+stem = undefined
 
 type Lexicon = HashMap Stem EmotionalDistribution
 type EmotionalDistribution = P.T Double Emotion

@@ -27,6 +27,7 @@ dependencies:
 - cassava
 - probability
 - unordered-containers
+- text-mining
 
 library:
   source-dirs: src
