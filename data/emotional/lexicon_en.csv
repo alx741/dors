@@ -1,4 +1,4 @@
-,stem,terms,anticipation,joy,trust,fear,sadness,disgust,anger,surprise,positive,negative,none,total
+id,stem,terms,anticipation,joy,trust,fear,sadness,disgust,anger,surprise,positive,negative,none,total
 0,thi,thy this,0,0,0,1,0,0,0,0,0,0,1,2
 1,is,is,0,0,0,0,0,0,0,0,0,0,5,5
 2,becaus,because,0,0,0,0,0,0,0,0,1,0,10,11
@@ -1679,7 +1679,6 @@
 1677,fluctuat,fluctuates fluctuated fluctuations fluctuate fluctuating,0,0,0,0,0,0,0,1,0,0,0,1
 1678,buri,buries bury buried burying,1,0,0,0,0,0,0,0,0,0,1,2
 1679,slope,slope slopes,1,0,0,0,0,0,0,0,0,0,0,1
-1680,tighter,tighter,0,0,0,0,0,0,1,0,3,0,2,6
 1681,highli,highly,0,0,0,0,0,0,0,0,0,0,2,2
 1682,loos,loosing loosely loose looses,0,0,0,0,1,0,0,0,0,0,0,1
 1683,core,core,0,1,1,0,0,0,0,0,0,0,0,2
