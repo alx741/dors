@@ -15,6 +15,7 @@
 #define SET_EYES    0x00
 #define MOVE_HEAD   0x01
 #define SET_EMOTION 0x02
+#define SHUTDOWN    0x03
 
 
 typedef struct
@@ -63,6 +64,11 @@ void execute_command(COMMAND_t c)
 
         case SET_EMOTION:
             convey_emotion(c.EMO_DIR);
+            break;
+
+        case SHUTDOWN:
+            move_head(0.0, 0.5);
+            select_eyes(eye_empty, eye_empty);
             break;
     }
 
