@@ -63,6 +63,7 @@ void set_motors()
 {
     *TIM4_CCR1 = PITCH_CURRENT;
     *TIM4_CCR2 = YAW_CURRENT;
+    return;
 }
 
 void step_left()
@@ -127,7 +128,8 @@ void step(DIRECTION_t d)
 
 void wait(void)
 {
-    for (int i = 0; i < 100000; i++);
+    for (int i = 0; i < 70000; i++);
+    return;
 }
 
 void move_head(float pitch, float yaw)
@@ -136,32 +138,30 @@ void move_head(float pitch, float yaw)
     int y = (yaw   * (YAW_MAX   - YAW_MIN))   + YAW_MIN;
 
     PORTB->ODR5 = false; // Enable yaw
-    while (PITCH_CURRENT != p && YAW_CURRENT != y)
+    while (PITCH_CURRENT != p || YAW_CURRENT != y)
     {
         if (PITCH_CURRENT < p)
         {
             PITCH_CURRENT += 10;
-            set_motors();
         }
         else if (PITCH_CURRENT > p)
         {
             PITCH_CURRENT -= 10;
-            set_motors();
         }
 
         if (YAW_CURRENT < y)
         {
             YAW_CURRENT += 10;
-            set_motors();
         }
         else if (YAW_CURRENT > y)
         {
             YAW_CURRENT -= 10;
-            set_motors();
         }
 
+        set_motors();
         wait();
     }
-    PORTC->ODR13 = false;
+    PORTB->ODR5 = true; // Disable yaw
+    PORTC->ODR13 ^= true; // Toggle indicator
     return;
 }
