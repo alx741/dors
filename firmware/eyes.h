@@ -28,4 +28,5 @@ const EYE_t eye_sad_up_right;
 const EYE_t eye_sad_down_left;
 const EYE_t eye_sad_down_right;
 const EYE_t eye_full;
+const EYE_t eye_empty;
 const EYE_t eye_dead;
