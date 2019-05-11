@@ -11,16 +11,17 @@ import           Data.HashMap.Strict              as HM
 import           Data.List                        (maximumBy)
 import           Data.Maybe                       (fromJust, isJust)
 import           Data.Text
+import           Data.Text.Encoding               (decodeUtf8)
 import           Data.Vector                      as V
 import           Numeric.Probability.Distribution as P
 import           Prelude                          hiding (Word, words)
 
-stem = undefined
+import Text.Mining.Stemming.Spanish (stem)
 
-type Lexicon = HashMap Stem EmotionalDistribution
+type Lexicon = HashMap Text EmotionalDistribution
 type EmotionalDistribution = P.T Double Emotion
-type Stem = Text
 
+-- | Circumplex of emotions (Plutchik, 1980)
 data Emotion
     = Anticipation
     | Joy
@@ -77,7 +78,7 @@ data Word prob = Word
 
 instance Fractional prob => FromRecord (Word prob) where
     parseRecord v
-        | V.length v == 15 = Word <$> v.! 1 <*> pure (P.enum intSlice emotions)
+        | V.length v == 15 = Word <$> pure (stem $ decodeUtf8 (v V.! 1)) <*> pure (P.enum intSlice emotions)
         | otherwise = mzero
         where
             emotions = enumFrom Anticipation
