@@ -2,6 +2,7 @@
 #include <f1.h>
 #include <rcc.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #define PITCH_INIT_VAL 1100
 #define YAW_INIT_VAL   1400
@@ -57,28 +58,6 @@ void motion_init()
     TIM4_CR1->CEN = true; // Counter enable
 }
 
-void step(DIRECTION_t d)
-{
-    switch (d)
-    {
-        case UP:
-            step_up();
-            break;
-        case DOWN:
-            step_down();
-            break;
-        case LEFT:
-            step_left();
-            break;
-        case RIGHT:
-            step_right();
-            break;
-    }
-
-#ifdef DEBUG
-    printf("pitch: %d\tyaw: %d\n\n", *TIM4_CCR1, *TIM4_CCR2);
-#endif
-}
 
 void set_motors()
 {
@@ -120,4 +99,69 @@ void step_up()
         PITCH_CURRENT += 30;
         set_motors();
     }
+}
+
+
+void step(DIRECTION_t d)
+{
+    switch (d)
+    {
+        case UP:
+            step_up();
+            break;
+        case DOWN:
+            step_down();
+            break;
+        case LEFT:
+            step_left();
+            break;
+        case RIGHT:
+            step_right();
+            break;
+    }
+
+#ifdef DEBUG
+    printf("pitch: %d\tyaw: %d\n\n", *TIM4_CCR1, *TIM4_CCR2);
+#endif
+}
+
+void wait(void)
+{
+    for (int i = 0; i < 100000; i++);
+}
+
+void move_head(float pitch, float yaw)
+{
+    int p = (pitch * (PITCH_MAX - PITCH_MIN)) + PITCH_MIN;
+    int y = (yaw   * (YAW_MAX   - YAW_MIN))   + YAW_MIN;
+
+    PORTB->ODR5 = false; // Enable yaw
+    while (PITCH_CURRENT != p && YAW_CURRENT != y)
+    {
+        if (PITCH_CURRENT < p)
+        {
+            PITCH_CURRENT += 10;
+            set_motors();
+        }
+        else if (PITCH_CURRENT > p)
+        {
+            PITCH_CURRENT -= 10;
+            set_motors();
+        }
+
+        if (YAW_CURRENT < y)
+        {
+            YAW_CURRENT += 10;
+            set_motors();
+        }
+        else if (YAW_CURRENT > y)
+        {
+            YAW_CURRENT -= 10;
+            set_motors();
+        }
+
+        wait();
+    }
+    PORTC->ODR13 = false;
+    return;
 }

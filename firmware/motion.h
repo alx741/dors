@@ -10,4 +10,10 @@
 typedef uint8_t DIRECTION_t;
 
 void motion_init(void);
+
+/*
+ * Position values in the continuous unit interval [0.0, 1.0]
+ */
+void move_head(float pitch, float yaw);
+
 void step(DIRECTION_t d);
