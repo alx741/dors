@@ -6,6 +6,14 @@
 #define PITCH_INIT_VAL 1100
 #define YAW_INIT_VAL   1400
 
+#define PITCH_MIN 800
+#define PITCH_MAX 1600
+#define YAW_MIN   1000
+#define YAW_MAX   1800
+
+static int PITCH_CURRENT = PITCH_INIT_VAL;
+static int YAW_CURRENT   = YAW_INIT_VAL;
+
 void motion_init()
 {
     // 50Hz carrier; 1ms - 2ms duty cycle
@@ -72,38 +80,44 @@ void step(DIRECTION_t d)
 #endif
 }
 
+void set_motors()
+{
+    *TIM4_CCR1 = PITCH_CURRENT;
+    *TIM4_CCR2 = YAW_CURRENT;
+}
+
 void step_left()
 {
-    int current = *TIM4_CCR2;
-    if (current > 1000)
+    if (YAW_CURRENT > YAW_MIN)
     {
-        *TIM4_CCR2 = current - 30;
+        YAW_CURRENT -= 30;
+        set_motors();
     }
 }
 
 void step_right()
 {
-    int current = *TIM4_CCR2;
-    if (current < 1800)
+    if (YAW_CURRENT < YAW_MAX)
     {
-        *TIM4_CCR2 = current + 30;
+        YAW_CURRENT += 30;
+        set_motors();
     }
 }
 
 void step_down()
 {
-    int current = *TIM4_CCR1;
-    if (current > 800)
+    if (PITCH_CURRENT > PITCH_MIN)
     {
-        *TIM4_CCR1 = current - 30;
+        PITCH_CURRENT -= 30;
+        set_motors();
     }
 }
 
 void step_up()
 {
-    int current = *TIM4_CCR1;
-    if (current < 1600)
+    if (PITCH_CURRENT < PITCH_MAX)
     {
-        *TIM4_CCR1 = current + 30;
+        PITCH_CURRENT += 30;
+        set_motors();
     }
 }
