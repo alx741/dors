@@ -62,7 +62,7 @@ void execute_command(COMMAND_t c)
             break;
 
         case SET_EMOTION:
-            // TODO
+            convey_emotion(c.EMO_DIR);
             break;
     }
 

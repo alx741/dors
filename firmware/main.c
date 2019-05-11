@@ -1,13 +1,12 @@
 #include "eyes.h"
 #include "motion.h"
+#include "emotion.h"
 #include "command.h"
 #include <f1.h>
 #include <rcc.h>
 #include <usart.h>
 #include <stdbool.h>
 #include <stdint.h>
-
-void delay(void);
 
 int main(void)
 {
@@ -22,9 +21,4 @@ int main(void)
     PORTC->ODR13 = true;
 
     command_loop();
-}
-
-void delay(void)
-{
-    for (int i = 0; i < 2000000; i++);
 }
