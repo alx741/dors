@@ -1,9 +1,6 @@
 #pragma once
 #include <stdint.h>
 
-typedef uint8_t EMOTION_t;
-void convey_emotion(EMOTION_t e);
-
 // Emotions
 #define ANGRY      0x01
 #define BORED      0x02
@@ -15,3 +12,6 @@ void convey_emotion(EMOTION_t e);
 #define SMILEY     0x08
 #define SURPRISED  0x09
 #define SUSPICIOUS 0x0A
+
+typedef uint8_t EMOTION_t;
+void convey_emotion(EMOTION_t e);

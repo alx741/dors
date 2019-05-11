@@ -128,7 +128,7 @@ void step(DIRECTION_t d)
 
 void wait(void)
 {
-    for (int i = 0; i < 70000; i++);
+    for (int i = 0; i < 60000; i++);
     return;
 }
 
@@ -162,6 +162,5 @@ void move_head(float pitch, float yaw)
         wait();
     }
     PORTB->ODR5 = true; // Disable yaw
-    PORTC->ODR13 ^= true; // Toggle indicator
     return;
 }
