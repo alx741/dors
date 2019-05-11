@@ -4,13 +4,13 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#define PITCH_INIT_VAL 1100
-#define YAW_INIT_VAL   1400
-
 #define PITCH_MIN 800
 #define PITCH_MAX 1600
 #define YAW_MIN   1000
 #define YAW_MAX   1800
+
+#define PITCH_INIT_VAL PITCH_MIN
+#define YAW_INIT_VAL   ((YAW_MIN + YAW_MAX)/2)
 
 static int PITCH_CURRENT = PITCH_INIT_VAL;
 static int YAW_CURRENT   = YAW_INIT_VAL;
