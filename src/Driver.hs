@@ -18,7 +18,7 @@ port :: String
 port = "/dev/ttyUSB0"
 
 robot :: Command -> IO ()
-robot = sendCommand . renderCommand
+robot = sendCommand . serializeCommand
 
 data Command
     = SetEyes    Emotion
@@ -70,26 +70,26 @@ sendCommand cmd = do
             unless (BSC8.pack ">" == char) $ waitHardware sp
 
 
-class RenderCommand a where
-    renderCommand :: a -> RawCommand
+class SerializeCommand a where
+    serializeCommand :: a -> RawCommand
 
-instance RenderCommand Command where
-    renderCommand (SetEyes a)    = 0x00 .|. shift (renderCommand a) 4
-    renderCommand (MoveHead (Position a) (Position b))
+instance SerializeCommand Command where
+    serializeCommand (SetEyes a)    = 0x00 .|. shift (serializeCommand a) 4
+    serializeCommand (MoveHead (Position a) (Position b))
         = 0x01
         .|. shift (fromIntegral a) 8
         .|. shift (fromIntegral b) 12
-    renderCommand (SetEmotion a) = 0x02 .|. shift (renderCommand a) 4
-    renderCommand Shutdown       = 0x03
+    serializeCommand (SetEmotion a) = 0x02 .|. shift (serializeCommand a) 4
+    serializeCommand Shutdown       = 0x03
 
-instance RenderCommand Emotion where
-    renderCommand Angry      = 0x01
-    renderCommand Bored      = 0x02
-    renderCommand Confused   = 0x03
-    renderCommand Happy      = 0x04
-    renderCommand Neutral    = 0x05
-    renderCommand Sad        = 0x06
-    renderCommand Sleepy     = 0x07
-    renderCommand Smiley     = 0x08
-    renderCommand Surprised  = 0x09
-    renderCommand Suspicious = 0x0A
+instance SerializeCommand Emotion where
+    serializeCommand Angry      = 0x01
+    serializeCommand Bored      = 0x02
+    serializeCommand Confused   = 0x03
+    serializeCommand Happy      = 0x04
+    serializeCommand Neutral    = 0x05
+    serializeCommand Sad        = 0x06
+    serializeCommand Sleepy     = 0x07
+    serializeCommand Smiley     = 0x08
+    serializeCommand Surprised  = 0x09
+    serializeCommand Suspicious = 0x0A
