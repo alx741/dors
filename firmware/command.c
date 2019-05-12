@@ -20,7 +20,9 @@
 
 typedef struct
 {
-    unsigned EMO_DIR : 4;
+    unsigned YAW     : 4;
+    unsigned PITCH   : 4;
+    unsigned EMOTION : 4;
     unsigned         : 2;
     unsigned CMD     : 2;
 } COMMAND_t;
@@ -33,13 +35,17 @@ void command_init()
 COMMAND_t read_command(int c)
 {
     COMMAND_t cmd;
-    cmd.CMD     = 0x03 & c;
-    cmd.EMO_DIR = (0xF0 & c) >> 4;
+    cmd.CMD     = 0x0003  & c;
+    cmd.EMOTION = (0x00F0 & c) >> 4;
+    cmd.PITCH   = (0x0F00 & c) >> 8;
+    cmd.YAW     = (0xF000 & c) >> 12;
 
 #ifdef DEBUG
-    printf("int: %x\n\n", c);
+    printf("int cmd: \n%#018x\n\n", c);
     printf("CMD: %x\n\n", cmd.CMD);
-    printf("EMO_DIR: %x\n\n", cmd.EMO_DIR);
+    printf("EMOTION: %x\n\n", cmd.EMOTION);
+    printf("PITCH: %x\n\n", cmd.PITCH);
+    printf("YAW: %x\n\n", cmd.YAW);
 #endif
 
     return cmd;
@@ -47,7 +53,17 @@ COMMAND_t read_command(int c)
 
 COMMAND_t receive_command()
 {
-    return read_command(getchar());
+    int command;
+    int c1 = getchar();
+    int c2 = getchar();
+    command = 0xFF & c1;
+    command |= (0xFF & c2) << 8;
+
+#ifdef DEBUG
+    printf("raw command: \n%#016x\n\n", command);
+#endif
+
+    return read_command(command);
 }
 
 void execute_command(COMMAND_t c)
@@ -55,15 +71,15 @@ void execute_command(COMMAND_t c)
     switch (c.CMD)
     {
         case SET_EYES:
-            set_eyes_emotion(c.EMO_DIR);
+            set_eyes_emotion(c.EMOTION);
             break;
 
         case MOVE_HEAD:
-            step(c.EMO_DIR);
+            move_head(c.PITCH/10.0, c.YAW/10.0);
             break;
 
         case SET_EMOTION:
-            convey_emotion(c.EMO_DIR);
+            convey_emotion(c.EMOTION);
             break;
 
         case SHUTDOWN:
