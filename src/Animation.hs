@@ -5,10 +5,10 @@ import Control.Concurrent (threadDelay)
 import Driver
 
 -- | Wait n milliseconds
-wait :: Int -> IO()
+wait :: Int -> IO ()
 wait = threadDelay . (\x -> x * 1000)
 
-wakeUpPhase1 :: IO()
+wakeUpPhase1 :: IO ()
 wakeUpPhase1 = do
     setEyes Suspicious
     wait 3000
@@ -22,7 +22,7 @@ wakeUpPhase1 = do
     wait 1000
     robot Shutdown
 
-wakeUpPhase2 :: IO()
+wakeUpPhase2 :: IO ()
 wakeUpPhase2 = do
     setEyes Suspicious
     wait 3000
@@ -42,7 +42,7 @@ wakeUpPhase2 = do
     wait 2000
     setEyes Neutral
 
-sleep :: IO()
+sleep :: IO ()
 sleep = do
     setHead (position 5) (position 5)
     wait 3000
