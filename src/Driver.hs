@@ -1,5 +1,8 @@
 module Driver
     ( robot
+    , setHead
+    , setEyes
+    , setEmotion
     , Command(..)
     , Emotion(..)
     , Position
@@ -19,6 +22,15 @@ port = "/dev/ttyUSB0"
 
 robot :: Command -> IO ()
 robot = sendCommand . serializeCommand
+
+setHead :: Position -> Position -> IO()
+setHead p = robot . MoveHead p
+
+setEyes :: Emotion -> IO()
+setEyes = robot . SetEyes
+
+setEmotion :: Emotion -> IO()
+setEmotion = robot . SetEmotion
 
 data Command
     = SetEyes    Emotion
