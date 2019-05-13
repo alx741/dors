@@ -26,6 +26,7 @@ dependencies:
 - vector
 - cassava
 - probability
+- process
 - unordered-containers
 - text-mining
 

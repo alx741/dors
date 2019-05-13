@@ -1,6 +1,12 @@
-module Voice where
+module Voice
+    ( VoiceConfig(..)
+    , defaultConfig
+    , sayWithConfig
+    , say
+    ) where
 
-import Data.Text (Text, unpack)
+import Data.Text      (Text, unpack)
+import System.Process (callCommand)
 
 data VoiceConfig = VoiceConfig
     { speed              :: Int
@@ -12,6 +18,42 @@ data VoiceConfig = VoiceConfig
     , mainEchoDecay      :: Float
     , secondaryEchoDecay :: Float
     } deriving (Show, Eq)
+
+defaultConfig :: VoiceConfig
+defaultConfig = VoiceConfig
+    { speed              = 140
+    , amplitude          = 100
+    , mainPitch          = 80
+    , wordGap            = 1
+    , overdrive          = 1
+    , postPitch          = 300
+    , mainEchoDecay      = 0.2
+    , secondaryEchoDecay = 0.7
+    }
+
+sayWithConfig :: VoiceConfig -> Text -> IO ()
+sayWithConfig cnf = callCommand . buildCmd cnf
+
+-- | /Say/ using the 'defaultConfig'
+say :: Text -> IO ()
+say = sayWithConfig defaultConfig
+
+buildCmd :: VoiceConfig -> Text -> String
+buildCmd cnf t
+    =  "echo "
+    <> unpack t
+    <> " | espeak-ng --stdin -ves+f4"
+    <> " -p " <> mainPitch' cnf'
+    <> " -g " <> wordGap' cnf'
+    <> " -a " <> amplitude' cnf'
+    <> " -s " <> speed' cnf'
+    <> " --stdout"
+    <> " | play -"
+    <> " overdrive " <> overdrive' cnf'
+    <> " pitch " <> postPitch' cnf'
+    <> " echo 0.8 0.88 60 " <> mainEchoDecay' cnf'
+    <> " echo 0.8 0.7 6 " <> secondaryEchoDecay' cnf'
+    where cnf' = voiceConfig2String cnf
 
 data VoiceConfigString = VoiceConfigString
     { speed'              :: String
@@ -34,35 +76,3 @@ voiceConfig2String cnf = VoiceConfigString
     (show $ postPitch cnf)
     (show $ mainEchoDecay cnf)
     (show $ secondaryEchoDecay cnf)
-
-defaultConfig :: VoiceConfig
-defaultConfig = VoiceConfig
-    { speed              = 140
-    , amplitude          = 100
-    , mainPitch          = 80
-    , wordGap            = 1
-    , overdrive          = 1
-    , postPitch          = 300
-    , mainEchoDecay      = 0.2
-    , secondaryEchoDecay = 0.7
-    }
-
-sayWithConfig :: VoiceConfig -> Text -> IO ()
-sayWithConfig cnf t = undefined
-
-buildCmd :: VoiceConfig -> Text ->  String
-buildCmd cnf t
-    =  "echo "
-    <> unpack t
-    <> " | espeak-ng --stdin -ves+f4"
-    <> " -p " <> mainPitch' cnf'
-    <> " -g " <> wordGap' cnf'
-    <> " -a " <> amplitude' cnf'
-    <> " -s " <> speed' cnf'
-    <> " --stdout"
-    <> " | play -"
-    <> " overdrive " <> overdrive' cnf'
-    <> " pitch " <> postPitch' cnf'
-    <> " echo 0.8 0.88 60 " <> mainEchoDecay' cnf'
-    <> " echo 0.8 0.7 6 " <> secondaryEchoDecay' cnf'
-    where cnf' = voiceConfig2String cnf
