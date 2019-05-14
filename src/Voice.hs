@@ -3,10 +3,13 @@ module Voice
     , defaultConfig
     , sayWithConfig
     , say
+    , Noise(..)
+    , makeNoise
     ) where
 
 import Data.Text      (Text, unpack)
 import System.Process (callCommand)
+import Data.Char (toLower)
 
 data VoiceConfig = VoiceConfig
     { speed              :: Int
@@ -25,35 +28,56 @@ defaultConfig = VoiceConfig
     , amplitude          = 100
     , mainPitch          = 80
     , wordGap            = 1
-    , overdrive          = 1
+    , overdrive          = 10
     , postPitch          = 300
     , mainEchoDecay      = 0.2
     , secondaryEchoDecay = 0.7
     }
 
 sayWithConfig :: VoiceConfig -> Text -> IO ()
-sayWithConfig cnf = callCommand . buildCmd cnf
+sayWithConfig cnf = callCommand . buildCmd
+    where
+        buildCmd :: Text -> String
+        buildCmd t
+            =  "echo "
+            <> unpack t
+            <> " | espeak-ng --stdin -ves+f4"
+            <> " -p " <> mainPitch' cnf'
+            <> " -g " <> wordGap' cnf'
+            <> " -a " <> amplitude' cnf'
+            <> " -s " <> speed' cnf'
+            <> " --stdout"
+            <> " | play -"
+            <> " overdrive " <> overdrive' cnf'
+            <> " pitch " <> postPitch' cnf'
+            <> " echo 0.8 0.88 60 " <> mainEchoDecay' cnf'
+            <> " echo 0.8 0.7 6 " <> secondaryEchoDecay' cnf'
+            where cnf' = voiceConfig2String cnf
 
 -- | /Say/ using the 'defaultConfig'
 say :: Text -> IO ()
 say = sayWithConfig defaultConfig
 
-buildCmd :: VoiceConfig -> Text -> String
-buildCmd cnf t
-    =  "echo "
-    <> unpack t
-    <> " | espeak-ng --stdin -ves+f4"
-    <> " -p " <> mainPitch' cnf'
-    <> " -g " <> wordGap' cnf'
-    <> " -a " <> amplitude' cnf'
-    <> " -s " <> speed' cnf'
-    <> " --stdout"
-    <> " | play -"
-    <> " overdrive " <> overdrive' cnf'
-    <> " pitch " <> postPitch' cnf'
-    <> " echo 0.8 0.88 60 " <> mainEchoDecay' cnf'
-    <> " echo 0.8 0.7 6 " <> secondaryEchoDecay' cnf'
-    where cnf' = voiceConfig2String cnf
+-- | Make a 'Noise'
+-- takes sound effects directory
+makeNoise :: FilePath -> Noise -> IO ()
+makeNoise fp = callCommand . buildCmd
+    where
+        buildCmd :: Noise -> String
+        buildCmd noise
+            =  "play "
+            <> fp <> "/"
+            <> (toLower <$> show noise <> ".wav")
+            <> " pitch 1000"
+            <> " overdrive 10"
+            <> " echo 0.8 0.88 60 0.2"
+            <> " echo 0.8 0.7 6 0.7"
+
+data Noise
+    = WeakupMumble
+    | Groan
+    | Interjection
+    deriving (Show, Eq)
 
 data VoiceConfigString = VoiceConfigString
     { speed'              :: String
