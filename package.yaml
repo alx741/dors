@@ -29,6 +29,7 @@ dependencies:
 - process
 - unordered-containers
 - text-mining
+- watson-stt-client
 
 library:
   source-dirs: src
