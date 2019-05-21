@@ -5,6 +5,9 @@
 artwork/*.png
 design/*~
 
+api_key
+access_token
+
 .stack-work/
 dors.cabal
 *~
