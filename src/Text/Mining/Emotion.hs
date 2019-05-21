@@ -17,6 +17,11 @@ import           Numeric.Probability.Distribution as P
 import           Prelude                          hiding (Word, words)
 
 import Text.Mining.Stemming.Spanish (stem)
+import Text.Mining.StopWords        (StopWordsLexiconNoDiacritics,
+                                     readLexiconFileIgnoreDiacritics,
+                                     removeStopWordsIgnoreDiacritics)
+
+import Text.Clean (removeAccents)
 
 type Lexicon = HashMap Text EmotionalDistribution
 type EmotionalDistribution = P.T Double Emotion
@@ -47,20 +52,20 @@ instance Semigroup EmotionalDistribution where
 instance Monoid EmotionalDistribution where
     mempty = P.uniform (enumFrom Anticipation)
 
-utteranceEmotion :: Text -> Lexicon -> Emotion
-utteranceEmotion t l = argmax $ utteranceEmotionalDist t l
+utteranceEmotion :: Text -> Lexicon -> StopWordsLexiconNoDiacritics -> Emotion
+utteranceEmotion t l swl = argmax $ utteranceEmotionalDist t l swl
 
 wordEmotion :: Text -> Lexicon -> Maybe Emotion
 wordEmotion t l = argmax <$> wordEmotionalDist t l
 
-utteranceEmotionalDist :: Text -> Lexicon -> EmotionalDistribution
-utteranceEmotionalDist t l = fold $ unMaybe $ flip wordEmotionalDist l <$> words t
+utteranceEmotionalDist :: Text -> Lexicon -> StopWordsLexiconNoDiacritics -> EmotionalDistribution
+utteranceEmotionalDist t l swl = fold $ unMaybe $ flip wordEmotionalDist l <$> words (removeStopWordsIgnoreDiacritics swl t)
     where
         unMaybe :: [Maybe a] -> [a]
         unMaybe = fmap fromJust . Prelude.filter isJust
 
 wordEmotionalDist :: Text -> Lexicon -> Maybe EmotionalDistribution
-wordEmotionalDist = HM.lookup . stem . strip
+wordEmotionalDist = HM.lookup . stem . toLower . removeAccents . strip
 
 argmax :: EmotionalDistribution -> Emotion
 argmax e = fst $ Data.List.maximumBy (\p1 p2 -> compare (snd p1) (snd p2)) $ decons e
@@ -78,7 +83,9 @@ data Word prob = Word
 
 instance Fractional prob => FromRecord (Word prob) where
     parseRecord v
-        | V.length v == 15 = Word <$> pure (stem $ decodeUtf8 (v V.! 1)) <*> pure (P.enum intSlice emotions)
+        | V.length v == 15 = Word
+            <$> pure (stem . toLower . removeAccents $ decodeUtf8 (v V.! 1))
+            <*> pure (P.enum intSlice emotions)
         | otherwise = mzero
         where
             emotions = enumFrom Anticipation
