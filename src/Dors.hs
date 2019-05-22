@@ -24,12 +24,11 @@ buildUtterance = buildUp ""
         buildUp utterance = do
             mVal <- await
             case mVal of
-                Nothing -> do
-                    liftIO $ print "Nothing"
-                    pure ()
-                Just val
-                    | val == "" -> yield utterance >> buildUtterance
-                    | otherwise -> buildUp $ utterance <> val
+                Nothing -> pure ()
+                Just ""
+                    | utterance == "" -> buildUtterance
+                    | otherwise -> yield utterance >> buildUtterance
+                Just val -> buildUp $ utterance <> val
 
 
 emotionalAnalysis :: FilePath -> FilePath -> ConduitT Text E.Emotion IO ()
