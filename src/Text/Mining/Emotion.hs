@@ -52,14 +52,14 @@ instance Semigroup EmotionalDistribution where
 instance Monoid EmotionalDistribution where
     mempty = P.uniform (enumFrom Anticipation)
 
-utteranceEmotion :: Text -> Lexicon -> StopWordsLexiconNoDiacritics -> Emotion
-utteranceEmotion t l swl = argmax $ utteranceEmotionalDist t l swl
+utteranceEmotion :: Lexicon -> StopWordsLexiconNoDiacritics -> Text ->  Emotion
+utteranceEmotion l swl t = argmax $ utteranceEmotionalDist l swl t
 
 wordEmotion :: Text -> Lexicon -> Maybe Emotion
 wordEmotion t l = argmax <$> wordEmotionalDist t l
 
-utteranceEmotionalDist :: Text -> Lexicon -> StopWordsLexiconNoDiacritics -> EmotionalDistribution
-utteranceEmotionalDist t l swl = fold $ unMaybe $ flip wordEmotionalDist l <$> words (removeStopWordsIgnoreDiacritics swl t)
+utteranceEmotionalDist :: Lexicon -> StopWordsLexiconNoDiacritics -> Text -> EmotionalDistribution
+utteranceEmotionalDist l swl t = fold $ unMaybe $ flip wordEmotionalDist l <$> words (removeStopWordsIgnoreDiacritics swl t)
     where
         unMaybe :: [Maybe a] -> [a]
         unMaybe = fmap fromJust . Prelude.filter isJust
