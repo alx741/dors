@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-unused-do-bind #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 
@@ -5,7 +6,7 @@ module Animation where
 
 import Control.Concurrent (threadDelay)
 import Driver
-import Voice              (Noise (..), makeNoise)
+import Voice              (Noise (..), makeNoise, say)
 
 -- | Wait n milliseconds
 wait :: Int -> IO ()
@@ -37,8 +38,6 @@ wakeUpPhase2 = do
     makeNoise' WakeupMumbleUp
     setHead (position 5) (position 5)
     wait 3000
-    setEyes Suspicious
-    wait 1000
     setEyes Angry
     setHead (position 5) (position 0)
     makeNoise' Groan
@@ -54,13 +53,24 @@ wakeUpPhase2 = do
 
 sleep :: IO ()
 sleep = do
-    setHead (position 5) (position 5)
-    wait 3000
+    setEmotion Neutral
+    wait 2000
     setEyes Bored
-    wait 3000
+    wait 2000
     setEyes Suspicious
-    wait 3000
+    wait 2000
     makeNoise' WakeupMumbleDown
     setHead (position 0) (position 5)
-    wait 3000
+    wait 2000
     robot Shutdown
+
+sayName :: IO ()
+sayName = do
+    setEmotion Neutral
+    wait 1000
+    setEmotion Smiley
+    say "me llamo dors"
+    wait 1500
+    makeNoise' LittleLaughter
+    wait 3000
+    setEmotion Neutral
