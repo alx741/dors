@@ -23,15 +23,14 @@ runDors accessTokenFile = do
 
 dors :: Connection -> IO ()
 dors conn =
-    runConduit $ speechSource conn
+    flip evalStateT (DorsState Asleep) $ runConduit $ speechSource conn
         .| buildUtterance
         .| emotionalAnalysis "data/emotional_lexicon_es.csv" "data/stopwords_es"
         -- .| conveyEmotion
         .| useUpEmotions
 
 
-speechSource :: Connection -> ConduitT () Text IO ()
-speechSource conn = forever $ yieldM $ receiveTranscripts conn
+type Dors = StateT DorsState IO
 
 data DorsState = DorsState
     { wakefulness :: Wakefulness
@@ -43,11 +42,10 @@ data Wakefulness
     | Awake
     deriving (Show, Eq)
 
-type Dors = StateT DorsState IO ()
+speechSource :: Connection -> ConduitT () Text Dors ()
+speechSource conn = forever $ yieldM $ liftIO $ receiveTranscripts conn
 
--- ConduitT () Void Dors
-
-buildUtterance :: ConduitT Text Text IO ()
+buildUtterance :: ConduitT Text Text Dors ()
 buildUtterance = buildUp ""
     where
         buildUp utterance = do
@@ -70,7 +68,7 @@ buildUtterance = buildUp ""
 --             | otherwise -> yield utterance >> buildUtterance
 
 
-emotionalAnalysis :: FilePath -> FilePath -> ConduitT Text E.Emotion IO ()
+emotionalAnalysis :: FilePath -> FilePath -> ConduitT Text E.Emotion Dors ()
 emotionalAnalysis emotional stopwords= do
     emotionalLexicon <- liftIO $ E.loadLexiconFile emotional
     stopWordsLexion <- liftIO $ readLexiconFileIgnoreDiacritics stopwords
@@ -85,7 +83,7 @@ emotionalAnalysis emotional stopwords= do
             yield $ emotion utterance
             emotionalAnalysis emotional stopwords
 
-conveyEmotion :: ConduitT E.Emotion Void IO ()
+conveyEmotion :: ConduitT E.Emotion Void Dors ()
 conveyEmotion =
     awaitForever $ \emotion -> do
         liftIO $ print emotion
@@ -96,7 +94,7 @@ conveyEmotion =
             Fear    -> liftIO $ setEmotion Sad
             _       -> liftIO $ setEmotion Neutral
 
-useUpEmotions :: ConduitT E.Emotion Void IO ()
+useUpEmotions :: ConduitT E.Emotion Void Dors ()
 useUpEmotions = do
     mval <- await
     liftIO $ print mval
