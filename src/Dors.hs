@@ -12,6 +12,7 @@ import Prelude                   as P hiding (words)
 import SttClient
 import Text.Mining.StopWords (readLexiconFileIgnoreDiacritics)
 
+import Animation
 import Driver
 import Text.Mining.Emotion as E
 
@@ -71,7 +72,7 @@ handleKeywords :: ConduitT Text Text Dors ()
 handleKeywords = awaitForever $ \utterance ->
     case findKeyword utterance >>= keywordToCommand of
         Nothing  -> yield utterance
-        Just cmd -> liftIO $ evalDorsCommand cmd
+        Just cmd -> lift $ evalDorsCommand cmd
     where
         findKeyword :: Text -> Maybe Text
         findKeyword t =
@@ -86,8 +87,20 @@ handleKeywords = awaitForever $ \utterance ->
             | keyword `elem` sayNameKeywords = Just SayName
             | otherwise = Nothing
 
-        evalDorsCommand :: DorsCommand -> IO ()
-        evalDorsCommand cmd = print $ "-- CMD: " <> show cmd
+        evalDorsCommand :: DorsCommand -> Dors ()
+        evalDorsCommand cmd
+            | cmd == WakeUp = do
+                (DorsState w) <- get
+                case w of
+                    Asleep -> do
+                        liftIO wakeUpPhase1
+                        put $ DorsState HalfAsleep
+                    HalfAsleep -> do
+                        liftIO wakeUpPhase2
+                        put $ DorsState Awake
+                    Awake -> pure ()
+                pure ()
+            | otherwise = pure ()
 
         keywords :: Set Text
         keywords = S.fromList
