@@ -28,6 +28,7 @@ dependencies:
 - probability
 - process
 - unordered-containers
+- conduit
 - text-mining
 - watson-stt-client
 
@@ -37,7 +38,7 @@ library:
   - -Wall
 
 executables:
-  dors-exe:
+  dors:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
