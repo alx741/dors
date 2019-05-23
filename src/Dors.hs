@@ -87,16 +87,9 @@ handleKeywords = awaitForever $ \utterance ->
                         put $ DorsState Awake
                     Awake -> pure ()
 
-            | cmd == Sleep = do
-                (DorsState w) <- get
-                case w of
-                    Awake -> do
-                        liftIO sleep
-                        put $ DorsState Asleep
-                    HalfAsleep -> do
-                        liftIO sleep
-                        put $ DorsState Asleep
-                    Asleep -> pure ()
+            | cmd == Sleep = liftIO sleep
+
+            | cmd == SayName = liftIO sayName
 
             | otherwise = pure ()
 
