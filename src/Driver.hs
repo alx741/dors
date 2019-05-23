@@ -4,7 +4,7 @@ module Driver
     , setEyes
     , setEmotion
     , Command(..)
-    , Emotion(..)
+    , PhyEmotion(..)
     , Position
     , position
     ) where
@@ -26,26 +26,27 @@ robot = sendCommand . serializeCommand
 setHead :: Position -> Position -> IO ()
 setHead p = robot . MoveHead p
 
-setEyes :: Emotion -> IO ()
+setEyes :: PhyEmotion -> IO ()
 setEyes = robot . SetEyes
 
-setEmotion :: Emotion -> IO ()
+setEmotion :: PhyEmotion -> IO ()
 setEmotion = robot . SetEmotion
 
 data Command
-    = SetEyes    Emotion
+    = SetEyes    PhyEmotion
     | MoveHead   Position Position
-    | SetEmotion Emotion
+    | SetEmotion PhyEmotion
     | Shutdown
     deriving (Show)
 
 newtype Position = Position Int deriving (Show)
 
-data Emotion
+data PhyEmotion
     = Angry
     | Bored
     | Confused
     | Happy
+    | Love
     | Neutral
     | Sad
     | Sleepy
@@ -94,7 +95,7 @@ instance SerializeCommand Command where
     serializeCommand (SetEmotion a) = 0x02 .|. shift (serializeCommand a) 4
     serializeCommand Shutdown       = 0x03
 
-instance SerializeCommand Emotion where
+instance SerializeCommand PhyEmotion where
     serializeCommand Angry      = 0x01
     serializeCommand Bored      = 0x02
     serializeCommand Confused   = 0x03
