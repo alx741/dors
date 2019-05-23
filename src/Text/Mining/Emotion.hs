@@ -83,10 +83,10 @@ data Word prob = Word
 
 instance Fractional prob => FromRecord (Word prob) where
     parseRecord v
-        | V.length v == 15 = Word
-            <$> pure (stem . toLower . removeAccents $ decodeUtf8 (v V.! 1))
+        | V.length v == 12 = Word
+            <$> pure (stem . toLower . removeAccents $ decodeUtf8 (v V.! 0))
             <*> pure (P.enum intSlice emotions)
         | otherwise = mzero
         where
             emotions = enumFrom Anticipation
-            intSlice = read . BS.unpack <$> (V.toList . V.slice 3 12) v
+            intSlice = read . BS.unpack <$> (V.toList . V.drop 1) v
