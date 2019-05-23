@@ -5,7 +5,9 @@ module Dors where
 import Conduit
 import Control.Monad             (forever)
 import Control.Monad.Trans.State
-import Data.Text
+import Data.Set                  as S
+import Data.Text                 (Text, strip, toLower, words)
+import Prelude                   as P hiding (words)
 
 import SttClient
 import Text.Mining.StopWords (readLexiconFileIgnoreDiacritics)
@@ -15,7 +17,7 @@ import Text.Mining.Emotion as E
 
 runDors :: FilePath -> IO ()
 runDors accessTokenFile = do
-    token <- Prelude.filter (/= '\n') <$> readFile accessTokenFile
+    token <- P.filter (/= '\n') <$> readFile accessTokenFile
     runWithSpeech sttConfig token dors
     where
         sttConfig :: ClientConfig
@@ -25,6 +27,7 @@ dors :: Connection -> IO ()
 dors conn =
     flip evalStateT (DorsState Asleep) $ runConduit $ speechSource conn
         .| buildUtterance
+        .| handleKeywords
         .| emotionalAnalysis "data/emotional_lexicon_es.csv" "data/stopwords_es"
         -- .| conveyEmotion
         .| useUpEmotions
@@ -40,6 +43,12 @@ data Wakefulness
     = Asleep
     | HalfAsleep
     | Awake
+    deriving (Show, Eq)
+
+data DorsCommand
+    = WakeUp
+    | Sleep
+    | SayName
     deriving (Show, Eq)
 
 speechSource :: Connection -> ConduitT () Text Dors ()
@@ -58,14 +67,38 @@ buildUtterance = buildUp ""
                 Just val -> buildUp $ utterance <> val
 
 
--- handleKeywords :: ConduitT Text Text IO ()
--- handleKeywords = do
---     mUtterance <- await
---     case mUtterance of
---         Nothing -> pure ()
---         Just utterance
---             | utterance == "" -> buildUtterance
---             | otherwise -> yield utterance >> buildUtterance
+handleKeywords :: ConduitT Text Text Dors ()
+handleKeywords = awaitForever $ \utterance ->
+    case findKeyword utterance >>= keywordToCommand of
+        Nothing  -> yield utterance
+        Just cmd -> liftIO $ evalDorsCommand cmd
+    where
+        findKeyword :: Text -> Maybe Text
+        findKeyword t =
+            case P.filter (`member` keywords) $ (words . strip . toLower) t of
+                []    -> Nothing
+                (x:_) -> Just x
+
+        keywordToCommand :: Text -> Maybe DorsCommand
+        keywordToCommand keyword
+            | keyword `elem` sleepKeywords   = Just Sleep
+            | keyword `elem` wakeUpKeywords  = Just WakeUp
+            | keyword `elem` sayNameKeywords = Just SayName
+            | otherwise = Nothing
+
+        evalDorsCommand :: DorsCommand -> IO ()
+        evalDorsCommand cmd = print $ "-- CMD: " <> show cmd
+
+        keywords :: Set Text
+        keywords = S.fromList
+            $  sleepKeywords
+            <> wakeUpKeywords
+            <> sayNameKeywords
+
+        sleepKeywords = ["duerme", "duermete"]
+        wakeUpKeywords = ["despierta", "despiertate"]
+        sayNameKeywords = ["nombre", "nombres", "llama", "llamas"]
+
 
 
 emotionalAnalysis :: FilePath -> FilePath -> ConduitT Text E.Emotion Dors ()
