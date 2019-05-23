@@ -1,9 +1,10 @@
 module Animation where
 
-import Control.Concurrent (threadDelay)
+import Control.Concurrent (ThreadId)
 
+import Control.Concurrent (threadDelay)
 import Driver
-import Voice  (Noise (..), makeNoise, say)
+import Voice              (Noise (..), makeNoise)
 
 -- | Wait n milliseconds
 wait :: Int -> IO ()
