@@ -69,7 +69,7 @@ makeNoise fp = forkIO . callCommand . buildCmd
             =  "play "
             <> fp <> "/"
             <> (toLower <$> show noise <> ".wav")
-            <> " pitch 1300"
+            <> " pitch 1000"
             <> " overdrive 10"
             <> " echo 0.8 0.88 60 0.2"
             <> " echo 0.8 0.7 6 0.7"
@@ -79,6 +79,7 @@ data Noise
     | WakeupMumbleDown
     | Groan
     | Interjection
+    | LittleLaughter
     deriving (Show, Eq)
 
 data VoiceConfigString = VoiceConfigString
