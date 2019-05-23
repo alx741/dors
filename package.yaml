@@ -20,6 +20,7 @@ description:         Please see the README on GitHub at <https://github.com/alx7
 
 dependencies:
 - base >= 4.7 && < 5
+- transformers
 - serialport
 - bytestring
 - text
@@ -27,6 +28,7 @@ dependencies:
 - cassava
 - probability
 - process
+- containers
 - unordered-containers
 - conduit
 - text-mining

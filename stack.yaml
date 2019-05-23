@@ -8,7 +8,7 @@ packages:
   extra-dep: true
 - location:
    git: https://github.com/alx741/watson-stt-client.git
-   commit: a5f2c31ebe2d17da9892e304c5395540744bfcba
+   commit: b999a4a3b8d6101c3fdc5df326f483ed46aaf8d7
   extra-dep: true
 
 extra-deps:
