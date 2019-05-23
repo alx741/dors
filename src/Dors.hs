@@ -74,6 +74,32 @@ handleKeywords = awaitForever $ \utterance ->
         Nothing  -> yield utterance
         Just cmd -> lift $ evalDorsCommand cmd
     where
+        evalDorsCommand :: DorsCommand -> Dors ()
+        evalDorsCommand cmd
+            | cmd == WakeUp = do
+                (DorsState w) <- get
+                case w of
+                    Asleep -> do
+                        liftIO wakeUpPhase1
+                        put $ DorsState HalfAsleep
+                    HalfAsleep -> do
+                        liftIO wakeUpPhase2
+                        put $ DorsState Awake
+                    Awake -> pure ()
+
+            | cmd == Sleep = do
+                (DorsState w) <- get
+                case w of
+                    Awake -> do
+                        liftIO sleep
+                        put $ DorsState Asleep
+                    HalfAsleep -> do
+                        liftIO sleep
+                        put $ DorsState Asleep
+                    Asleep -> pure ()
+
+            | otherwise = pure ()
+
         findKeyword :: Text -> Maybe Text
         findKeyword t =
             case P.filter (`member` keywords) $ (words . strip . toLower) t of
@@ -87,29 +113,14 @@ handleKeywords = awaitForever $ \utterance ->
             | keyword `elem` sayNameKeywords = Just SayName
             | otherwise = Nothing
 
-        evalDorsCommand :: DorsCommand -> Dors ()
-        evalDorsCommand cmd
-            | cmd == WakeUp = do
-                (DorsState w) <- get
-                case w of
-                    Asleep -> do
-                        liftIO wakeUpPhase1
-                        put $ DorsState HalfAsleep
-                    HalfAsleep -> do
-                        liftIO wakeUpPhase2
-                        put $ DorsState Awake
-                    Awake -> pure ()
-                pure ()
-            | otherwise = pure ()
-
         keywords :: Set Text
         keywords = S.fromList
             $  sleepKeywords
             <> wakeUpKeywords
             <> sayNameKeywords
 
-        sleepKeywords = ["duerme", "duermete"]
-        wakeUpKeywords = ["despierta", "despiertate"]
+        sleepKeywords   = ["duerme", "duermete"]
+        wakeUpKeywords  = ["despierta", "despiertate"]
         sayNameKeywords = ["nombre", "nombres", "llama", "llamas"]
 
 
