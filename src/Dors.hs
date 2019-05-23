@@ -3,24 +3,49 @@
 module Dors where
 
 import Conduit
+import Control.Monad             (forever)
+import Control.Monad.Trans.State
 import Data.Text
 
+import SttClient
 import Text.Mining.StopWords (readLexiconFileIgnoreDiacritics)
 
-import           SttClient
 import Driver
 import Text.Mining.Emotion as E
 
 runDors :: FilePath -> IO ()
 runDors accessTokenFile = do
     token <- Prelude.filter (/= '\n') <$> readFile accessTokenFile
-    runPipelineWithSpeech sttConfig token pipeline
+    runWithSpeech sttConfig token dors
+    where
+        sttConfig :: ClientConfig
+        sttConfig = ClientConfig "es-ES_BroadbandModel" 0.15
 
-pipeline :: Pipeline
-pipeline = buildUtterance .| emotionalAnalysis "data/emotional_lexicon_es.csv" "data/stopwords_es" .| conveyEmotion
+dors :: Connection -> IO ()
+dors conn =
+    runConduit $ speechSource conn
+        .| buildUtterance
+        .| emotionalAnalysis "data/emotional_lexicon_es.csv" "data/stopwords_es"
+        -- .| conveyEmotion
+        .| useUpEmotions
 
-sttConfig :: ClientConfig
-sttConfig = ClientConfig "es-ES_BroadbandModel" 0.15
+
+speechSource :: Connection -> ConduitT () Text IO ()
+speechSource conn = forever $ yieldM $ receiveTranscripts conn
+
+data DorsState = DorsState
+    { wakefulness :: Wakefulness
+    } deriving (Show, Eq)
+
+data Wakefulness
+    = Asleep
+    | HalfAsleep
+    | Awake
+    deriving (Show, Eq)
+
+type Dors = StateT DorsState IO ()
+
+-- ConduitT () Void Dors
 
 buildUtterance :: ConduitT Text Text IO ()
 buildUtterance = buildUp ""
@@ -61,7 +86,7 @@ emotionalAnalysis emotional stopwords= do
             emotionalAnalysis emotional stopwords
 
 conveyEmotion :: ConduitT E.Emotion Void IO ()
-conveyEmotion = do
+conveyEmotion =
     awaitForever $ \emotion -> do
         liftIO $ print emotion
         case emotion of
