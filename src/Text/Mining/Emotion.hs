@@ -18,7 +18,6 @@ import           Prelude                          hiding (Word, words)
 
 import Text.Mining.Stemming.Spanish (stem)
 import Text.Mining.StopWords        (StopWordsLexiconNoDiacritics,
-                                     readLexiconFileIgnoreDiacritics,
                                      removeStopWordsIgnoreDiacritics)
 
 import Text.Clean (removeAccents)
@@ -52,7 +51,7 @@ instance Semigroup EmotionalDistribution where
 instance Monoid EmotionalDistribution where
     mempty = P.uniform (enumFrom Anticipation)
 
-utteranceEmotion :: Lexicon -> StopWordsLexiconNoDiacritics -> Text ->  Emotion
+utteranceEmotion :: Lexicon -> StopWordsLexiconNoDiacritics -> Text -> Emotion
 utteranceEmotion l swl t = argmax $ utteranceEmotionalDist l swl t
 
 wordEmotion :: Text -> Lexicon -> Maybe Emotion

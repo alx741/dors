@@ -106,3 +106,4 @@ instance SerializeCommand PhyEmotion where
     serializeCommand Smiley     = 0x08
     serializeCommand Surprised  = 0x09
     serializeCommand Suspicious = 0x0A
+    serializeCommand Love       = 0x0B

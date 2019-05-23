@@ -1,6 +1,7 @@
-module Animation where
+{-# OPTIONS_GHC -Wno-unused-do-bind #-}
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
 
-import Control.Concurrent (ThreadId)
+module Animation where
 
 import Control.Concurrent (threadDelay)
 import Driver
@@ -8,7 +9,7 @@ import Voice              (Noise (..), makeNoise)
 
 -- | Wait n milliseconds
 wait :: Int -> IO ()
-wait = threadDelay . (\x -> x * 1000)
+wait = threadDelay . (* 1000)
 
 noiseDir = "./data/sound"
 makeNoise' = makeNoise noiseDir
