@@ -17,7 +17,7 @@ import Text.Mining.Emotion as E
 
 dors :: IO ()
 dors = do
-    (ClosedStream, speechSource, Inherited, cph) <- streamingProcess (shell "pocketsphinx_continuous -hmm data/asr_model/voxforge_es_sphinx.cd_ptm_4000 -lm data/asr_model/es-20k.lm -dict data/asr_model/es.dict -inmic yes 2> stt.log")
+    (ClosedStream, speechSource, Inherited, _) <- streamingProcess $ speechCmd "data/asr_model"
     flip evalStateT (DorsState Asleep) $ runConduit
         $  speechSource
         .| decodeUtf8C
@@ -26,6 +26,14 @@ dors = do
         .| emotionalAnalysis "data/emotional_lexicon_es.csv" "data/stopwords_es"
         -- -- .| conveyEmotion
         .| useUpEmotions
+    where
+        speechCmd modelDir = shell
+            $  "pocketsphinx_continuous"
+            <> " -hmm " <> modelDir
+            <> " -lm " <> modelDir <> "/es-20k.lm"
+            <> " -dict " <> modelDir <> "/es.dict"
+            <> " -inmic " <> "yes"
+            <> " 2> stt.log"
 
 type Dors = StateT DorsState IO
 
