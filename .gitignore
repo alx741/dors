@@ -4,6 +4,9 @@
 
 artwork/*.png
 design/*~
+data/asr_model/es.dict
+data/asr_model/es-20k.lm
+data/asr_model/voxforge_es_sphinx.cd_ptm_4000/
 
 api_key
 access_token
