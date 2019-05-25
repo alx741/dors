@@ -21,20 +21,11 @@ dors = do
     flip evalStateT (DorsState Asleep) $ runConduit
         $  speechSource
         .| decodeUtf8C
-        -- .| sink
         .| cleanUtterance
         .| handleKeywords
         .| emotionalAnalysis "data/emotional_lexicon_es.csv" "data/stopwords_es"
         -- -- .| conveyEmotion
         .| useUpEmotions
-
--- sink :: ConduitT Text Void Dors ()
--- sink = do
---     mval <- await
---     case mval of
---         Nothing -> sink
---         Just val -> liftIO (print $ "TRANS: " <> show val) >> sink
-
 
 type Dors = StateT DorsState IO
 
@@ -113,6 +104,7 @@ handleKeywords = awaitForever $ \utterance ->
 
 
 
+-- FIXME: take lexica instead of file paths
 emotionalAnalysis :: FilePath -> FilePath -> ConduitT Text E.Emotion Dors ()
 emotionalAnalysis emotional stopwords= do
     emotionalLexicon <- liftIO $ E.loadLexiconFile emotional
@@ -128,8 +120,7 @@ emotionalAnalysis emotional stopwords= do
             emotionalAnalysis emotional stopwords
 
 conveyEmotion :: ConduitT E.Emotion Void Dors ()
-conveyEmotion =
-    awaitForever $ \emotion -> do
+conveyEmotion = awaitForever $ \emotion -> do
         liftIO $ putStrLn $ "-- Conveying emotion: " <> show emotion
         case emotion of
             Joy     -> liftIO $ setEmotion Smiley
@@ -139,7 +130,5 @@ conveyEmotion =
             _       -> liftIO $ setEmotion Neutral
 
 useUpEmotions :: ConduitT E.Emotion Void Dors ()
-useUpEmotions = do
-    mval <- await
-    liftIO $ print mval
-    useUpEmotions
+useUpEmotions = awaitForever $ \emotion -> do
+    liftIO $ putStrLn $ "-- Emotion: " <> show emotion
