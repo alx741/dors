@@ -9,7 +9,7 @@ import Data.Set                  (Set, fromList, member)
 import Data.Text                 as T (Text, filter, strip, toLower, words)
 import Prelude                   as P hiding (words)
 
-import Text.Mining.StopWords (readLexiconFileIgnoreDiacritics)
+import Text.Mining.StopWords (StopWordsLexiconNoDiacritics, readLexiconFileIgnoreDiacritics)
 
 import Animation
 import Driver
@@ -17,13 +17,15 @@ import Text.Mining.Emotion as E
 
 dors :: IO ()
 dors = do
+    emotionalLexicon <- liftIO $ E.loadLexiconFile "data/emotional_lexicon_es.csv"
+    stopWordsLexion <- liftIO $ readLexiconFileIgnoreDiacritics "data/stopwords_es"
     (ClosedStream, speechSource, Inherited, _) <- streamingProcess $ speechCmd "data/asr_model"
     flip evalStateT (DorsState Asleep) $ runConduit
         $  speechSource
         .| decodeUtf8C
         .| cleanUtterance
         .| handleKeywords
-        .| emotionalAnalysis "data/emotional_lexicon_es.csv" "data/stopwords_es"
+        .| emotionalAnalysis emotionalLexicon stopWordsLexion
         -- -- .| conveyEmotion
         .| useUpEmotions
     where
@@ -112,20 +114,9 @@ handleKeywords = awaitForever $ \utterance ->
 
 
 
--- FIXME: take lexica instead of file paths
-emotionalAnalysis :: FilePath -> FilePath -> ConduitT Text E.Emotion Dors ()
-emotionalAnalysis emotional stopwords= do
-    emotionalLexicon <- liftIO $ E.loadLexiconFile emotional
-    stopWordsLexion <- liftIO $ readLexiconFileIgnoreDiacritics stopwords
-    let emotion = E.utteranceEmotion emotionalLexicon stopWordsLexion
-    mUtterance <- await
-    case mUtterance of
-        Nothing -> do
-            liftIO $ print "Nothing"
-            pure ()
-        Just utterance -> do
-            yield $ emotion utterance
-            emotionalAnalysis emotional stopwords
+emotionalAnalysis :: E.Lexicon -> StopWordsLexiconNoDiacritics -> ConduitT Text E.Emotion Dors ()
+emotionalAnalysis emotional stopwords = awaitForever $ \utterance ->
+    yield $ E.utteranceEmotion emotional stopwords utterance
 
 conveyEmotion :: ConduitT E.Emotion Void Dors ()
 conveyEmotion = awaitForever $ \emotion -> do
