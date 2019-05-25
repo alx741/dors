@@ -9,7 +9,8 @@ import Data.Set                  (Set, fromList, member)
 import Data.Text                 as T (Text, filter, strip, toLower, words)
 import Prelude                   as P hiding (words)
 
-import Text.Mining.StopWords (StopWordsLexiconNoDiacritics, readLexiconFileIgnoreDiacritics)
+import Text.Mining.StopWords (StopWordsLexiconNoDiacritics,
+                              readLexiconFileIgnoreDiacritics)
 
 import Animation
 import Driver
@@ -84,17 +85,9 @@ handleKeywords = awaitForever $ \utterance ->
                         put $ DorsState Awake
                     Awake -> pure ()
 
-            | cmd == Sleep = do
-                (DorsState w) <- get
-                case w of
-                    Asleep -> liftIO sleep
-                    _ -> pure ()
+            | cmd == Sleep = whenAwake $ liftIO sleep
 
-            | cmd == SayName = do
-                (DorsState w) <- get
-                case w of
-                    Awake -> liftIO sayName
-                    _ -> pure ()
+            | cmd == SayName = whenAwake $ liftIO sayName
 
             | otherwise = pure ()
 
@@ -111,7 +104,7 @@ handleKeywords = awaitForever $ \utterance ->
             | keyword `elem` sayNameKeywords = Just SayName
             | otherwise = Nothing
 
-        printCmd cmd = liftIO $ putStrLn $ "-- Running command: " <> show cmd
+        printCmd cmd = liftIO $ putStrLn $ "-- Handling command: " <> show cmd
 
         keywords :: Set Text
         keywords = fromList
@@ -119,9 +112,9 @@ handleKeywords = awaitForever $ \utterance ->
             <> wakeUpKeywords
             <> sayNameKeywords
 
-        sleepKeywords   = ["duerme", "duermete"]
-        wakeUpKeywords  = ["despierta", "despiertate"]
-        sayNameKeywords = ["nombre", "nombres", "llama", "llamas"]
+        sleepKeywords   = ["duerme", "duermete", "duermen"]
+        wakeUpKeywords  = ["despierta", "despiertate", "despiertan"]
+        sayNameKeywords = ["nombre", "nombres", "llama", "llamas", "llaman"]
 
 
 
@@ -130,19 +123,23 @@ emotionalAnalysis emotional stopwords = awaitForever $ \utterance ->
     yield $ E.utteranceEmotion emotional stopwords utterance
 
 conveyEmotion :: ConduitT E.Emotion Void Dors ()
-conveyEmotion = awaitForever $ \emotion -> do
-        (DorsState wake) <- lift get
-        case wake of
-            Awake -> do
-                liftIO $ putStrLn $ "-- Conveying emotion: " <> show emotion
-                case emotion of
-                    Joy     -> liftIO $ setEmotion Smiley
-                    Anger   -> liftIO $ setEmotion Angry
-                    Sadness -> liftIO $ setEmotion Sad
-                    Fear    -> liftIO $ setEmotion Sad
-                    _       -> liftIO $ setEmotion Neutral
-            _  -> pure ()
+conveyEmotion = awaitForever $ \emotion -> lift $ whenAwake $ do
+    liftIO $ putStrLn $ "-- Conveying emotion: " <> show emotion
+    case emotion of
+        Joy     -> liftIO $ setEmotion Smiley
+        Anger   -> liftIO $ setEmotion Angry
+        Sadness -> liftIO $ setEmotion Sad
+        Fear    -> liftIO $ setEmotion Sad
+        _       -> liftIO $ setEmotion Neutral
 
 useUpEmotions :: ConduitT E.Emotion Void Dors ()
-useUpEmotions = awaitForever $ \emotion -> do
+useUpEmotions = awaitForever $ \emotion ->
     liftIO $ putStrLn $ "-- Emotion: " <> show emotion
+
+
+whenAwake :: Dors () -> Dors ()
+whenAwake f = do
+    (DorsState w) <- get
+    case w of
+        Awake -> f
+        _     -> pure ()
