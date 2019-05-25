@@ -65,15 +65,14 @@ cleanUtterance = awaitForever $ \rawUtterance -> do
 
 
 handleKeywords :: ConduitT Text Text Dors ()
-handleKeywords = awaitForever $ \utterance -> do
+handleKeywords = awaitForever $ \utterance ->
     case findKeyword utterance >>= keywordToCommand of
         Nothing  -> yield utterance
-        Just cmd -> lift $ evalDorsCommand cmd
+        Just cmd -> printCmd cmd >> lift (evalDorsCommand cmd)
     where
         evalDorsCommand :: DorsCommand -> Dors ()
         evalDorsCommand cmd
             | cmd == WakeUp = do
-                printCmd cmd
                 (DorsState w) <- get
                 case w of
                     Asleep -> do
@@ -83,11 +82,8 @@ handleKeywords = awaitForever $ \utterance -> do
                         liftIO wakeUpPhase2
                         put $ DorsState Awake
                     Awake -> pure ()
-
-            | cmd == Sleep = printCmd cmd >> liftIO sleep
-
-            | cmd == SayName = printCmd cmd >> liftIO sayName
-
+            | cmd == Sleep = liftIO sleep
+            | cmd == SayName = liftIO sayName
             | otherwise = pure ()
 
         findKeyword :: Text -> Maybe Text
