@@ -2,6 +2,8 @@
 *.elf
 *.o
 
+stt.log
+
 artwork/*.png
 design/*~
 data/asr_model/es.dict
