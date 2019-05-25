@@ -3,35 +3,37 @@
 module Dors where
 
 import Conduit
-import Control.Monad             (forever)
 import Control.Monad.Trans.State
-import Data.Set                  as S
-import Data.Text                 (Text, strip, toLower, words)
+import Data.Conduit.Process
+import Data.Set                  (Set, fromList, member)
+import Data.Text                 as T (Text, filter, strip, toLower, words)
 import Prelude                   as P hiding (words)
 
-import SttClient
 import Text.Mining.StopWords (readLexiconFileIgnoreDiacritics)
 
 import Animation
 import Driver
 import Text.Mining.Emotion as E
 
-runDors :: FilePath -> IO ()
-runDors accessTokenFile = do
-    token <- P.filter (/= '\n') <$> readFile accessTokenFile
-    runWithSpeech sttConfig token dors
-    where
-        sttConfig :: ClientConfig
-        sttConfig = ClientConfig "es-ES_BroadbandModel" 0.15
-
-dors :: Connection -> IO ()
-dors conn =
-    flip evalStateT (DorsState Asleep) $ runConduit $ speechSource conn
-        .| buildUtterance
+dors :: IO ()
+dors = do
+    (ClosedStream, speechSource, Inherited, cph) <- streamingProcess (shell "pocketsphinx_continuous -hmm data/asr_model/voxforge_es_sphinx.cd_ptm_4000 -lm data/asr_model/es-20k.lm -dict data/asr_model/es.dict -inmic yes 2> stt.log")
+    flip evalStateT (DorsState Asleep) $ runConduit
+        $  speechSource
+        .| decodeUtf8C
+        -- .| sink
+        .| cleanUtterance
         .| handleKeywords
         .| emotionalAnalysis "data/emotional_lexicon_es.csv" "data/stopwords_es"
-        -- .| conveyEmotion
+        -- -- .| conveyEmotion
         .| useUpEmotions
+
+-- sink :: ConduitT Text Void Dors ()
+-- sink = do
+--     mval <- await
+--     case mval of
+--         Nothing -> sink
+--         Just val -> liftIO (print $ "TRANS: " <> show val) >> sink
 
 
 type Dors = StateT DorsState IO
@@ -52,24 +54,18 @@ data DorsCommand
     | SayName
     deriving (Show, Eq)
 
-speechSource :: Connection -> ConduitT () Text Dors ()
-speechSource conn = forever $ yieldM $ liftIO $ receiveTranscripts conn
-
-buildUtterance :: ConduitT Text Text Dors ()
-buildUtterance = buildUp ""
-    where
-        buildUp utterance = do
-            mVal <- await
-            case mVal of
-                Nothing -> pure ()
-                Just ""
-                    | utterance == "" -> buildUtterance
-                    | otherwise -> yield utterance >> buildUtterance
-                Just val -> buildUp $ utterance <> val
+cleanUtterance :: ConduitT Text Text Dors ()
+cleanUtterance = awaitForever $ \rawUtterance -> do
+    let utterance = strip $ T.filter (/= '\n') rawUtterance
+    case utterance of
+        "" -> cleanUtterance
+        _ -> do
+            liftIO . putStrLn $ show utterance
+            yield utterance
 
 
 handleKeywords :: ConduitT Text Text Dors ()
-handleKeywords = awaitForever $ \utterance ->
+handleKeywords = awaitForever $ \utterance -> do
     case findKeyword utterance >>= keywordToCommand of
         Nothing  -> yield utterance
         Just cmd -> lift $ evalDorsCommand cmd
@@ -77,6 +73,7 @@ handleKeywords = awaitForever $ \utterance ->
         evalDorsCommand :: DorsCommand -> Dors ()
         evalDorsCommand cmd
             | cmd == WakeUp = do
+                printCmd cmd
                 (DorsState w) <- get
                 case w of
                     Asleep -> do
@@ -87,9 +84,9 @@ handleKeywords = awaitForever $ \utterance ->
                         put $ DorsState Awake
                     Awake -> pure ()
 
-            | cmd == Sleep = liftIO sleep
+            | cmd == Sleep = printCmd cmd >> liftIO sleep
 
-            | cmd == SayName = liftIO sayName
+            | cmd == SayName = printCmd cmd >> liftIO sayName
 
             | otherwise = pure ()
 
@@ -106,8 +103,10 @@ handleKeywords = awaitForever $ \utterance ->
             | keyword `elem` sayNameKeywords = Just SayName
             | otherwise = Nothing
 
+        printCmd cmd = liftIO $ putStrLn $ "-- Running command: " <> show cmd
+
         keywords :: Set Text
-        keywords = S.fromList
+        keywords = fromList
             $  sleepKeywords
             <> wakeUpKeywords
             <> sayNameKeywords
@@ -129,14 +128,13 @@ emotionalAnalysis emotional stopwords= do
             liftIO $ print "Nothing"
             pure ()
         Just utterance -> do
-            liftIO $ print utterance
             yield $ emotion utterance
             emotionalAnalysis emotional stopwords
 
 conveyEmotion :: ConduitT E.Emotion Void Dors ()
 conveyEmotion =
     awaitForever $ \emotion -> do
-        liftIO $ print emotion
+        liftIO $ putStrLn $ "-- Conveying emotion: " <> show emotion
         case emotion of
             Joy     -> liftIO $ setEmotion Smiley
             Anger   -> liftIO $ setEmotion Angry

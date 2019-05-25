@@ -31,8 +31,9 @@ dependencies:
 - containers
 - unordered-containers
 - conduit
+- conduit-extra
+- conduit-combinators
 - text-mining
-- watson-stt-client
 
 library:
   source-dirs: src
