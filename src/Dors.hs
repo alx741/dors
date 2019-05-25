@@ -26,8 +26,8 @@ dors = do
         .| cleanUtterance
         .| handleKeywords
         .| emotionalAnalysis emotionalLexicon stopWordsLexion
-        -- -- .| conveyEmotion
-        .| useUpEmotions
+        .| conveyEmotion
+        -- .| useUpEmotions
     where
         speechCmd modelDir = shell
             $  "pocketsphinx_continuous"
@@ -83,8 +83,19 @@ handleKeywords = awaitForever $ \utterance ->
                         liftIO wakeUpPhase2
                         put $ DorsState Awake
                     Awake -> pure ()
-            | cmd == Sleep = liftIO sleep
-            | cmd == SayName = liftIO sayName
+
+            | cmd == Sleep = do
+                (DorsState w) <- get
+                case w of
+                    Asleep -> liftIO sleep
+                    _ -> pure ()
+
+            | cmd == SayName = do
+                (DorsState w) <- get
+                case w of
+                    Awake -> liftIO sayName
+                    _ -> pure ()
+
             | otherwise = pure ()
 
         findKeyword :: Text -> Maybe Text
@@ -120,13 +131,17 @@ emotionalAnalysis emotional stopwords = awaitForever $ \utterance ->
 
 conveyEmotion :: ConduitT E.Emotion Void Dors ()
 conveyEmotion = awaitForever $ \emotion -> do
-        liftIO $ putStrLn $ "-- Conveying emotion: " <> show emotion
-        case emotion of
-            Joy     -> liftIO $ setEmotion Smiley
-            Anger   -> liftIO $ setEmotion Angry
-            Sadness -> liftIO $ setEmotion Sad
-            Fear    -> liftIO $ setEmotion Sad
-            _       -> liftIO $ setEmotion Neutral
+        (DorsState wake) <- lift get
+        case wake of
+            Awake -> do
+                liftIO $ putStrLn $ "-- Conveying emotion: " <> show emotion
+                case emotion of
+                    Joy     -> liftIO $ setEmotion Smiley
+                    Anger   -> liftIO $ setEmotion Angry
+                    Sadness -> liftIO $ setEmotion Sad
+                    Fear    -> liftIO $ setEmotion Sad
+                    _       -> liftIO $ setEmotion Neutral
+            _  -> pure ()
 
 useUpEmotions :: ConduitT E.Emotion Void Dors ()
 useUpEmotions = awaitForever $ \emotion -> do
