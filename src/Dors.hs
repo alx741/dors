@@ -33,7 +33,6 @@ dors = do
         .| handleKeywords
         .| emotionalAnalysis emotionalLexicon stopWordsLexion
         .| conveyEmotion
-        -- .| useUpEmotions
     where
         speechCmd modelDir = shell
             $  "pocketsphinx_continuous"
@@ -69,7 +68,6 @@ cleanUtterance = awaitForever $ \rawUtterance -> do
         _ -> do
             liftIO . putStrLn $ show utterance
             yield utterance
-
 
 handleKeywords :: ConduitT Text Text Dors ()
 handleKeywords = awaitForever $ \utterance ->
@@ -122,7 +120,6 @@ handleKeywords = awaitForever $ \utterance ->
         sayNameKeywords = ["nombre", "nombres", "llama", "llamas", "llaman"]
 
 
-
 emotionalAnalysis :: E.Lexicon -> StopWordsLexiconNoDiacritics -> ConduitT Text E.Emotion Dors ()
 emotionalAnalysis emotional stopwords = awaitForever $ \utterance ->
     yield $ E.utteranceEmotion emotional stopwords utterance
@@ -140,7 +137,6 @@ conveyEmotion = awaitForever $ \emotion -> lift $ whenAwake $ do
 useUpEmotions :: ConduitT E.Emotion Void Dors ()
 useUpEmotions = awaitForever $ \emotion ->
     liftIO $ putStrLn $ "-- Emotion: " <> show emotion
-
 
 whenAwake :: Dors () -> Dors ()
 whenAwake f = do
