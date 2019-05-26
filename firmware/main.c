@@ -20,5 +20,8 @@ int main(void)
     PORTC->CNF13 = CNF_OUT_PUSH_PULL;
     PORTC->ODR13 = true;
 
+    move_head(0.0, 0.5);
+    select_eyes(eye_empty, eye_empty);
+
     command_loop();
 }
