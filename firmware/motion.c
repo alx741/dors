@@ -6,7 +6,7 @@
 
 #define PITCH_MIN 800
 #define PITCH_MAX 1600
-#define YAW_MIN   1000
+#define YAW_MIN   1100
 #define YAW_MAX   1800
 
 #define PITCH_INIT_VAL PITCH_MIN
