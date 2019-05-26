@@ -8,6 +8,7 @@ import Data.Conduit.Process
 import Data.Set                  (Set, fromList, member)
 import Data.Text                 as T (Text, filter, strip, toLower, words)
 import Prelude                   as P hiding (words)
+import System.Posix.Signals
 
 import Text.Mining.StopWords (StopWordsLexiconNoDiacritics,
                               readLexiconFileIgnoreDiacritics)
@@ -18,9 +19,13 @@ import Text.Mining.Emotion as E
 
 dors :: IO ()
 dors = do
+    _ <- installHandler sigINT (Catch $ robot Shutdown) Nothing
+
     emotionalLexicon <- liftIO $ E.loadLexiconFile "data/emotional_lexicon_es.csv"
     stopWordsLexion <- liftIO $ readLexiconFileIgnoreDiacritics "data/stopwords_es"
+
     (ClosedStream, speechSource, Inherited, _) <- streamingProcess $ speechCmd "data/asr_model"
+
     flip evalStateT (DorsState Asleep) $ runConduit
         $  speechSource
         .| decodeUtf8C
