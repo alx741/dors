@@ -62,8 +62,8 @@ void blink_advance_phase(void)
             break;
 
         case 3:
-            FRAME_BUFFER[3] = 0xFFFF;
-            FRAME_BUFFER[4] = 0xFFFF;
+            FRAME_BUFFER[3] = 0x0000;
+            FRAME_BUFFER[4] = 0x0000;
             CURRENT_BLINK_PHASE++;
             break;
 
