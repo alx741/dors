@@ -3,6 +3,10 @@
 module Dors where
 
 import Conduit
+import Control.Concurrent (forkIO)
+import Control.Concurrent.MVar
+import Control.Monad (forever, when)
+import Data.Time.Clock (UTCTime, getCurrentTime, diffUTCTime)
 import Control.Monad.Trans.State
 import Data.Conduit.Process
 import Data.Set                  (Set, fromList, member)
@@ -17,6 +21,17 @@ import Animation
 import Driver
 import Text.Mining.Emotion as E
 
+tellSilence :: DorsState -> IO ()
+tellSilence s@(DorsState _ mVarLastUtterance) = forever $ do
+    lastUtterance <- takeMVar mVarLastUtterance
+    let loop = do
+            currentTime <- getCurrentTime
+            print $ diffUTCTime currentTime lastUtterance
+            when (diffUTCTime currentTime lastUtterance > 20) $
+                print "PREGUNTA" >> tellSilence s
+            loop
+    loop
+
 dors :: IO ()
 dors = do
     _ <- installHandler sigINT (Catch $ robot Shutdown) Nothing
@@ -26,7 +41,11 @@ dors = do
 
     (ClosedStream, speechSource, Inherited, _) <- streamingProcess $ speechCmd "data/asr_model"
 
-    flip evalStateT (DorsState Asleep) $ runConduit
+    time <- getCurrentTime >>= newMVar
+    let initialDorsState = DorsState Awake time
+    forkIO $ tellSilence initialDorsState
+    flip evalStateT initialDorsState $ runConduit
+    -- flip evalStateT (DorsState Asleep 0) $ runConduit
         $  speechSource
         .| decodeUtf8C
         .| cleanUtterance
@@ -46,7 +65,8 @@ type Dors = StateT DorsState IO
 
 data DorsState = DorsState
     { wakefulness :: Wakefulness
-    } deriving (Show, Eq)
+    , lastUtteranceAt :: MVar UTCTime
+    } deriving (Eq)
 
 data Wakefulness
     = Asleep
@@ -58,6 +78,7 @@ data DorsCommand
     = WakeUp
     | Sleep
     | SayName
+    | SayHello
     deriving (Show, Eq)
 
 cleanUtterance :: ConduitT Text Text Dors ()
@@ -67,44 +88,50 @@ cleanUtterance = awaitForever $ \rawUtterance -> do
         "" -> cleanUtterance
         _ -> do
             liftIO . putStrLn $ show utterance
+            lift updateUtteranceTime
             yield utterance
+    where
+        updateUtteranceTime = do
+            mVarLastUtterance <- lastUtteranceAt <$> get
+            time <- liftIO getCurrentTime
+            liftIO $ putMVar mVarLastUtterance time
 
 handleKeywords :: ConduitT Text Text Dors ()
 handleKeywords = awaitForever $ \utterance ->
     case findKeyword utterance >>= keywordToCommand of
-        Nothing  -> yield utterance
+        Nothing -> yield utterance
         Just cmd -> printCmd cmd >> lift (evalDorsCommand cmd)
     where
         evalDorsCommand :: DorsCommand -> Dors ()
         evalDorsCommand cmd
             | cmd == WakeUp = do
-                (DorsState w) <- get
+                (DorsState w c) <- get
                 case w of
                     Asleep -> do
                         liftIO wakeUpPhase1
-                        put $ DorsState HalfAsleep
+                        put $ DorsState HalfAsleep c
                     HalfAsleep -> do
                         liftIO wakeUpPhase2
-                        put $ DorsState Awake
+                        put $ DorsState Awake c
                     Awake -> pure ()
 
-            | cmd == Sleep = whenAwake $ liftIO sleep
-
-            | cmd == SayName = whenAwake $ liftIO sayName
-
+            | cmd == Sleep    = whenAwake $ liftIO sleep
+            | cmd == SayName  = whenAwake $ liftIO sayName
+            | cmd == SayHello = whenAwake $ liftIO sayHello
             | otherwise = pure ()
 
         findKeyword :: Text -> Maybe Text
         findKeyword t =
             case P.filter (`member` keywords) $ (words . strip . toLower) t of
-                []    -> Nothing
+                [] -> Nothing
                 (x:_) -> Just x
 
         keywordToCommand :: Text -> Maybe DorsCommand
         keywordToCommand keyword
-            | keyword `elem` sleepKeywords   = Just Sleep
-            | keyword `elem` wakeUpKeywords  = Just WakeUp
-            | keyword `elem` sayNameKeywords = Just SayName
+            | keyword `elem` sleepKeywords    = Just Sleep
+            | keyword `elem` wakeUpKeywords   = Just WakeUp
+            | keyword `elem` sayNameKeywords  = Just SayName
+            | keyword `elem` sayHelloKeywords = Just SayHello
             | otherwise = Nothing
 
         printCmd cmd = liftIO $ putStrLn $ "-- Handling command: " <> show cmd
@@ -114,10 +141,12 @@ handleKeywords = awaitForever $ \utterance ->
             $  sleepKeywords
             <> wakeUpKeywords
             <> sayNameKeywords
+            <> sayHelloKeywords
 
-        sleepKeywords   = ["duerme", "duermete", "duermen"]
-        wakeUpKeywords  = ["despierta", "despiertate", "despiertan"]
-        sayNameKeywords = ["nombre", "nombres", "llama", "llamas", "llaman"]
+        sleepKeywords    = ["duerme", "duermete", "duermen"]
+        wakeUpKeywords   = ["despierta", "despiertate", "despiertan"]
+        sayNameKeywords  = ["nombre", "nombres", "llama", "llamas", "llaman"]
+        sayHelloKeywords = ["hola"]
 
 
 emotionalAnalysis :: E.Lexicon -> StopWordsLexiconNoDiacritics -> ConduitT Text E.Emotion Dors ()
@@ -128,11 +157,13 @@ conveyEmotion :: ConduitT E.Emotion Void Dors ()
 conveyEmotion = awaitForever $ \emotion -> lift $ whenAwake $ do
     liftIO $ putStrLn $ "-- Conveying emotion: " <> show emotion
     case emotion of
-        Joy     -> liftIO $ setEmotion Smiley
-        Anger   -> liftIO $ setEmotion Angry
-        Sadness -> liftIO $ setEmotion Sad
-        Fear    -> liftIO $ setEmotion Sad
-        _       -> liftIO $ setEmotion Neutral
+        Joy -> liftIO $ set Smiley
+        Anger -> liftIO $ set Angry
+        Sadness -> liftIO $ set Sad
+        Fear -> liftIO $ set Sad
+        _ -> liftIO $ set Neutral
+    where set = setEyes
+    -- where set = setEmotion
 
 useUpEmotions :: ConduitT E.Emotion Void Dors ()
 useUpEmotions = awaitForever $ \emotion ->
@@ -140,7 +171,7 @@ useUpEmotions = awaitForever $ \emotion ->
 
 whenAwake :: Dors () -> Dors ()
 whenAwake f = do
-    (DorsState w) <- get
+    (DorsState w _) <- get
     case w of
         Awake -> f
-        _     -> pure ()
+        _ -> pure ()

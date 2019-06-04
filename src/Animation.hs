@@ -73,3 +73,10 @@ sayName = do
     makeNoise' LittleLaughter
     wait 2000
     setEmotion Neutral
+
+sayHello :: IO ()
+sayHello = do
+    setEmotion Happy
+    say "hola"
+    wait 1000
+    setEmotion Neutral

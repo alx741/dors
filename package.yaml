@@ -20,21 +20,22 @@ description:         Please see the README on GitHub at <https://github.com/alx7
 
 dependencies:
 - base >= 4.7 && < 5
-- transformers
-- serialport
-- unix
 - bytestring
-- text
-- vector
 - cassava
+- conduit
+- conduit-combinators
+- conduit-extra
+- containers
 - probability
 - process
-- containers
-- unordered-containers
-- conduit
-- conduit-extra
-- conduit-combinators
+- serialport
+- text
 - text-mining
+- time
+- transformers
+- unix
+- unordered-containers
+- vector
 
 library:
   source-dirs: src
