@@ -3,10 +3,6 @@
 module Dors where
 
 import Conduit
-import Control.Concurrent (forkIO)
-import Control.Concurrent.MVar
-import Control.Monad (forever, when)
-import Data.Time.Clock (UTCTime, getCurrentTime, diffUTCTime)
 import Control.Monad.Trans.State
 import Data.Conduit.Process
 import Data.Set                  (Set, fromList, member)
@@ -21,17 +17,6 @@ import Animation
 import Driver
 import Text.Mining.Emotion as E
 
-tellSilence :: DorsState -> IO ()
-tellSilence s@(DorsState _ mVarLastUtterance) = forever $ do
-    lastUtterance <- takeMVar mVarLastUtterance
-    let loop = do
-            currentTime <- getCurrentTime
-            print $ diffUTCTime currentTime lastUtterance
-            when (diffUTCTime currentTime lastUtterance > 20) $
-                print "PREGUNTA" >> tellSilence s
-            loop
-    loop
-
 dors :: IO ()
 dors = do
     _ <- installHandler sigINT (Catch $ robot Shutdown) Nothing
@@ -41,11 +26,8 @@ dors = do
 
     (ClosedStream, speechSource, Inherited, _) <- streamingProcess $ speechCmd "data/asr_model"
 
-    time <- getCurrentTime >>= newMVar
-    let initialDorsState = DorsState Awake time
-    forkIO $ tellSilence initialDorsState
-    flip evalStateT initialDorsState $ runConduit
-    -- flip evalStateT (DorsState Asleep 0) $ runConduit
+    flip evalStateT (DorsState Awake) $ runConduit
+    -- flip evalStateT (DorsState Asleep) $ runConduit
         $  speechSource
         .| decodeUtf8C
         .| cleanUtterance
@@ -65,7 +47,6 @@ type Dors = StateT DorsState IO
 
 data DorsState = DorsState
     { wakefulness :: Wakefulness
-    , lastUtteranceAt :: MVar UTCTime
     } deriving (Eq)
 
 data Wakefulness
@@ -88,31 +69,25 @@ cleanUtterance = awaitForever $ \rawUtterance -> do
         "" -> cleanUtterance
         _ -> do
             liftIO . putStrLn $ show utterance
-            lift updateUtteranceTime
             yield utterance
-    where
-        updateUtteranceTime = do
-            mVarLastUtterance <- lastUtteranceAt <$> get
-            time <- liftIO getCurrentTime
-            liftIO $ putMVar mVarLastUtterance time
 
 handleKeywords :: ConduitT Text Text Dors ()
 handleKeywords = awaitForever $ \utterance ->
     case findKeyword utterance >>= keywordToCommand of
-        Nothing -> yield utterance
+        Nothing  -> yield utterance
         Just cmd -> printCmd cmd >> lift (evalDorsCommand cmd)
     where
         evalDorsCommand :: DorsCommand -> Dors ()
         evalDorsCommand cmd
             | cmd == WakeUp = do
-                (DorsState w c) <- get
+                (DorsState w) <- get
                 case w of
                     Asleep -> do
                         liftIO wakeUpPhase1
-                        put $ DorsState HalfAsleep c
+                        put $ DorsState HalfAsleep
                     HalfAsleep -> do
                         liftIO wakeUpPhase2
-                        put $ DorsState Awake c
+                        put $ DorsState Awake
                     Awake -> pure ()
 
             | cmd == Sleep    = whenAwake $ liftIO sleep
@@ -123,7 +98,7 @@ handleKeywords = awaitForever $ \utterance ->
         findKeyword :: Text -> Maybe Text
         findKeyword t =
             case P.filter (`member` keywords) $ (words . strip . toLower) t of
-                [] -> Nothing
+                []    -> Nothing
                 (x:_) -> Just x
 
         keywordToCommand :: Text -> Maybe DorsCommand
@@ -157,11 +132,11 @@ conveyEmotion :: ConduitT E.Emotion Void Dors ()
 conveyEmotion = awaitForever $ \emotion -> lift $ whenAwake $ do
     liftIO $ putStrLn $ "-- Conveying emotion: " <> show emotion
     case emotion of
-        Joy -> liftIO $ set Smiley
-        Anger -> liftIO $ set Angry
+        Joy     -> liftIO $ set Smiley
+        Anger   -> liftIO $ set Angry
         Sadness -> liftIO $ set Sad
-        Fear -> liftIO $ set Sad
-        _ -> liftIO $ set Neutral
+        Fear    -> liftIO $ set Sad
+        _       -> liftIO $ set Neutral
     where set = setEyes
     -- where set = setEmotion
 
@@ -171,7 +146,7 @@ useUpEmotions = awaitForever $ \emotion ->
 
 whenAwake :: Dors () -> Dors ()
 whenAwake f = do
-    (DorsState w _) <- get
+    (DorsState w) <- get
     case w of
         Awake -> f
-        _ -> pure ()
+        _     -> pure ()
