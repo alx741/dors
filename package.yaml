@@ -36,7 +36,11 @@ dependencies:
 - unix
 - unordered-containers
 - vector
+- aeson
 - postgresql-simple
+- wai
+- warp
+- servant-server
 
 library:
   source-dirs: src
