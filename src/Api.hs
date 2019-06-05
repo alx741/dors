@@ -34,8 +34,7 @@ server :: Server EmotionAPI
 server = do
     dbConn <- liftIO $ connectPostgreSQL "host=localhost port=5432 dbname=dors user=alx password=verde"
     emotions <- liftIO $ (query_ dbConn "select * from emotions":: IO [(Text, UTCTime)])
-    liftIO $ print emotions
-    return []
+    pure $ (\(e, ts) -> EmotionRecord e ts) <$> emotions
 
 emotionAPI :: Proxy EmotionAPI
 emotionAPI = Proxy

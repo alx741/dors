@@ -5,6 +5,7 @@ module Dors where
 import Conduit
 import Data.Time.Clock (getCurrentTime)
 import Control.Monad.Trans.State
+import Control.Concurrent (forkIO)
 import Database.PostgreSQL.Simple
 import Data.Conduit.Process
 import Data.Set                  (Set, fromList, member)
@@ -19,6 +20,8 @@ import Animation
 import Driver
 import Text.Mining.Emotion as E
 
+import Api
+
 dors :: IO ()
 dors = do
     _ <- installHandler sigINT (Catch $ robot Shutdown) Nothing
@@ -27,6 +30,8 @@ dors = do
     stopWordsLexion <- liftIO $ readLexiconFileIgnoreDiacritics "data/stopwords_es"
 
     (ClosedStream, speechSource, Inherited, _) <- streamingProcess $ speechCmd "data/asr_model"
+
+    forkIO runAPI
 
     -- flip evalStateT (DorsState Awake) $ runConduit
     flip evalStateT (DorsState Asleep) $ runConduit
