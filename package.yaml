@@ -36,6 +36,7 @@ dependencies:
 - unix
 - unordered-containers
 - vector
+- postgresql-simple
 
 library:
   source-dirs: src

@@ -3,7 +3,9 @@
 module Dors where
 
 import Conduit
+import Data.Time.Clock (getCurrentTime)
 import Control.Monad.Trans.State
+import Database.PostgreSQL.Simple
 import Data.Conduit.Process
 import Data.Set                  (Set, fromList, member)
 import Data.Text                 as T (Text, filter, strip, toLower, words)
@@ -26,14 +28,15 @@ dors = do
 
     (ClosedStream, speechSource, Inherited, _) <- streamingProcess $ speechCmd "data/asr_model"
 
-    flip evalStateT (DorsState Awake) $ runConduit
-    -- flip evalStateT (DorsState Asleep) $ runConduit
+    -- flip evalStateT (DorsState Awake) $ runConduit
+    flip evalStateT (DorsState Asleep) $ runConduit
         $  speechSource
         .| decodeUtf8C
         .| cleanUtterance
         .| handleKeywords
         .| emotionalAnalysis emotionalLexicon stopWordsLexion
         .| conveyEmotion
+        .| storeEmotion
     where
         speechCmd modelDir = shell
             $  "pocketsphinx_continuous"
@@ -128,17 +131,25 @@ emotionalAnalysis :: E.Lexicon -> StopWordsLexiconNoDiacritics -> ConduitT Text 
 emotionalAnalysis emotional stopwords = awaitForever $ \utterance ->
     yield $ E.utteranceEmotion emotional stopwords utterance
 
-conveyEmotion :: ConduitT E.Emotion Void Dors ()
-conveyEmotion = awaitForever $ \emotion -> lift $ whenAwake $ do
-    liftIO $ putStrLn $ "-- Conveying emotion: " <> show emotion
-    case emotion of
-        Joy     -> liftIO $ set Smiley
-        Anger   -> liftIO $ set Angry
-        Sadness -> liftIO $ set Sad
-        Fear    -> liftIO $ set Sad
-        _       -> liftIO $ set Neutral
-    where set = setEyes
-    -- where set = setEmotion
+conveyEmotion :: ConduitT E.Emotion E.Emotion Dors ()
+conveyEmotion = awaitForever $ \emotion -> convey emotion >> yield emotion
+    where
+        set = setEmotion
+        convey emotion = lift $ whenAwake $ do
+            liftIO $ putStrLn $ "-- Conveying emotion: " <> show emotion
+            case emotion of
+                Joy     -> liftIO $ set Smiley
+                Anger   -> liftIO $ set Angry
+                Sadness -> liftIO $ set Sad
+                Fear    -> liftIO $ set Sad
+                _       -> liftIO $ set Neutral
+
+storeEmotion :: ConduitT E.Emotion Void Dors ()
+storeEmotion = awaitForever $ \emotion -> do
+    dbConn <- liftIO $ connectPostgreSQL "host=localhost port=5432 dbname=dors user=alx password=verde"
+    time <- liftIO getCurrentTime
+    _ <- liftIO $ execute dbConn "insert into emotions (emotion, at) values (?, ?)" (show emotion, time)
+    pure ()
 
 useUpEmotions :: ConduitT E.Emotion Void Dors ()
 useUpEmotions = awaitForever $ \emotion ->
