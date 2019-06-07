@@ -16,25 +16,30 @@ import Control.Monad.IO.Class
 import GHC.Generics (Generic)
 import Servant
 import Data.Aeson
-import Data.Aeson.Types
+import Data.List as L (groupBy)
+-- import Data.Aeson.Types
 import Database.PostgreSQL.Simple
-import Network.Wai
+-- import Network.Wai
 import Network.Wai.Handler.Warp
 
-type EmotionAPI = "emotions" :> Get '[JSON] [EmotionRecord]
+type EmotionAPI
+    = "emotions" :> Get '[JSON] [EmotionRecord]
+    :<|> Raw
 
 data EmotionRecord = EmotionRecord
     { emotion :: Text
-    , at      :: UTCTime
+    , count :: Int
     } deriving (Show, Generic)
 
 instance ToJSON EmotionRecord
 
 server :: Server EmotionAPI
-server = do
-    dbConn <- liftIO $ connectPostgreSQL "host=localhost port=5432 dbname=dors user=alx password=verde"
-    emotions <- liftIO $ (query_ dbConn "select * from emotions":: IO [(Text, UTCTime)])
-    pure $ (\(e, ts) -> EmotionRecord e ts) <$> emotions
+server = serveEmotions :<|> serveDirectory "ui"
+    where
+        serveEmotions = do
+            dbConn <- liftIO $ connectPostgreSQL "host=localhost port=5432 dbname=dors user=alx password=verde"
+            emotions <- liftIO $ (query_ dbConn "select emotion, count(emotion) from emotions group by emotion":: IO [(Text, Int)])
+            pure $ (\(e, cnt) -> EmotionRecord e cnt) <$> emotions
 
 emotionAPI :: Proxy EmotionAPI
 emotionAPI = Proxy
