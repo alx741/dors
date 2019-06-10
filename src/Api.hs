@@ -11,15 +11,11 @@
 module Api where
 
 import Data.Text
-import Data.Time    (UTCTime)
 import Control.Monad.IO.Class
 import GHC.Generics (Generic)
 import Servant
 import Data.Aeson
-import Data.List as L (groupBy)
--- import Data.Aeson.Types
 import Database.PostgreSQL.Simple
--- import Network.Wai
 import Network.Wai.Handler.Warp
 
 type EmotionAPI
@@ -34,7 +30,7 @@ data EmotionRecord = EmotionRecord
 instance ToJSON EmotionRecord
 
 server :: Server EmotionAPI
-server = serveEmotions :<|> serveDirectory "ui"
+server = serveEmotions :<|> serveDirectoryFileServer "ui"
     where
         serveEmotions = do
             dbConn <- liftIO $ connectPostgreSQL "host=localhost port=5432 dbname=dors user=alx password=verde"
@@ -48,4 +44,4 @@ app :: Application
 app = serve emotionAPI server
 
 runAPI :: IO ()
-runAPI = run 8080 app
+runAPI = run 3000 app
