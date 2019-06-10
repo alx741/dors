@@ -41,6 +41,7 @@ dependencies:
 - wai
 - warp
 - servant-server
+- random
 
 library:
   source-dirs: src

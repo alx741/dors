@@ -1,17 +1,19 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 module Dors where
 
 import Conduit
-import Data.Time.Clock (getCurrentTime)
+import Control.Concurrent         (forkIO)
 import Control.Monad.Trans.State
-import Control.Concurrent (forkIO)
-import Database.PostgreSQL.Simple
 import Data.Conduit.Process
-import Data.Set                  (Set, fromList, member)
-import Data.Text                 as T (Text, filter, strip, toLower, words)
-import Prelude                   as P hiding (words)
+import Data.Set                   (Set, fromList, member)
+import Data.Text                  as T (Text, filter, strip, toLower, words)
+import Data.Time.Clock            (getCurrentTime)
+import Database.PostgreSQL.Simple
+import Prelude                    as P hiding (words)
 import System.Posix.Signals
+import System.Random              (randomRIO)
 
 import Text.Mining.StopWords (StopWordsLexiconNoDiacritics,
                               readLexiconFileIgnoreDiacritics)
@@ -31,7 +33,7 @@ dors = do
 
     (ClosedStream, speechSource, Inherited, _) <- streamingProcess $ speechCmd "data/asr_model"
 
-    forkIO runAPI
+    _ <- forkIO runAPI
 
     -- flip evalStateT (DorsState Awake) $ runConduit
     flip evalStateT (DorsState Asleep) $ runConduit
@@ -127,7 +129,7 @@ handleKeywords = awaitForever $ \utterance ->
             <> sayHelloKeywords
 
         sleepKeywords    = ["duerme", "duermete", "duermen"]
-        wakeUpKeywords   = ["despierta", "despiertate", "despiertan"]
+        wakeUpKeywords   = ["despierta", "despierto", "despiertate", "despiertan"]
         sayNameKeywords  = ["nombre", "nombres", "llama", "llamas", "llaman"]
         sayHelloKeywords = ["hola"]
 
@@ -139,15 +141,14 @@ emotionalAnalysis emotional stopwords = awaitForever $ \utterance ->
 conveyEmotion :: ConduitT E.Emotion E.Emotion Dors ()
 conveyEmotion = awaitForever $ \emotion -> convey emotion >> yield emotion
     where
-        set = setEmotion
-        convey emotion = lift $ whenAwake $ do
-            liftIO $ putStrLn $ "-- Conveying emotion: " <> show emotion
-            case emotion of
-                Joy     -> liftIO $ set Smiley
-                Anger   -> liftIO $ set Angry
-                Sadness -> liftIO $ set Sad
-                Fear    -> liftIO $ set Sad
-                _       -> liftIO $ set Neutral
+        convey emotion = lift $ whenAwake $ liftIO $ do
+            putStrLn $ "-- Conveying emotion: " <> show emotion
+            rndPickPhyEmotion emotion >>= setEmotion
+
+        rndPickPhyEmotion :: E.Emotion -> IO PhyEmotion
+        rndPickPhyEmotion e =
+            let emotions = physicalEmotions e
+            in (emotions !!) <$> randomRIO (0, length emotions - 1)
 
 storeEmotion :: ConduitT E.Emotion Void Dors ()
 storeEmotion = awaitForever $ \emotion -> do
@@ -166,3 +167,15 @@ whenAwake f = do
     case w of
         Awake -> f
         _     -> pure ()
+
+
+physicalEmotions :: E.Emotion -> [PhyEmotion]
+physicalEmotions Anticipation = [Surprised, Suspicious]
+physicalEmotions Joy          = [Happy, Smiley, Love]
+physicalEmotions Trust        = [Happy, Neutral]
+physicalEmotions Fear         = [Sad, Confused, Surprised]
+physicalEmotions Sadness      = [Sad]
+physicalEmotions Disgust      = [Angry, Surprised, Confused]
+physicalEmotions Anger        = [Angry]
+physicalEmotions Surprise     = [Surprised]
+physicalEmotions _            = [Neutral]
