@@ -2,6 +2,10 @@
 *.elf
 *.o
 
+dist
+dist-newstyle
+.ghc.*
+
 stt.log
 
 artwork/*.png

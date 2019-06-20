@@ -2,7 +2,6 @@
 
 module Main where
 
-
 import Dors
 
 main :: IO ()
