@@ -7,13 +7,14 @@ module Dors where
 import Conduit
 import Control.Concurrent         (forkIO, killThread, newEmptyMVar, putMVar)
 import Control.Concurrent.MVar    (takeMVar)
-import Control.Monad              (forever)
+import Control.Monad              (forever, when)
 import Control.Monad.Trans.State
 import Data.ByteString            (ByteString, hGetLine)
 import Data.Conduit.Process
 import Data.Set                   (Set, fromList, member)
 import Data.Text                  as T (Text, filter, strip, toLower, words)
 import Data.Time.Clock            (getCurrentTime)
+import Data.Time.Clock.POSIX      (POSIXTime, getPOSIXTime)
 import Database.PostgreSQL.Simple
 import Prelude                    as P hiding (words)
 import System.IO                  (BufferMode (..), hSetBuffering)
@@ -37,8 +38,8 @@ dors args = do
 
     initialState  <-
             case args of
-                ("-a":_) -> goNeutral >> pure (DorsState Awake)
-                _        -> pure (DorsState Asleep)
+                ("-a":_) -> goNeutral >> pure (DorsState Awake Nothing)
+                _        -> pure (DorsState Asleep Nothing)
 
     installHandler sigINT (Catch $ robot Shutdown) Nothing
 
@@ -54,16 +55,17 @@ dors args = do
         $  sourceUtterance 10 questions
         .| decodeUtf8C
         .| cleanUtterance
-        -- .| handleKeywords
+        .| handleKeywords
         .| emotionalAnalysis emotionalLexicon stopWordsLexion
-        -- .| conveyEmotion
-        -- .| storeEmotion
-        .| useUpEmotions
+        .| conveyEmotion
+        .| storeEmotion
+        -- .| useUpEmotions
 
 type Dors = StateT DorsState IO
 
 data DorsState = DorsState
-    { wakefulness :: Wakefulness
+    { wakefulness     :: Wakefulness
+    , startedSpeaking :: Maybe POSIXTime
     } deriving (Eq, Show)
 
 data Wakefulness
@@ -83,7 +85,7 @@ sourceUtterance :: Int -> [Text] -> ConduitT () ByteString Dors ()
 sourceUtterance s questions = do
     (_, Just outp, _, _phandle) <- liftIO $ createProcess $ (speechCmd "data/asr_model")  { std_out = CreatePipe, std_in = CreatePipe }
     liftIO $ hSetBuffering outp LineBuffering
-    mvar <- liftIO $ newEmptyMVar
+    mvar <- liftIO newEmptyMVar
     tid <- liftIO $ forkIO $ forever $ hGetLine outp >>= putMVar mvar
 
     let loop qs = do
@@ -92,19 +94,27 @@ sourceUtterance s questions = do
                 Nothing -> do
                     qs' <- lift $ askQuestion qs
                     loop qs'
-                Just x -> yield x >> loop qs
+                Just x -> do
+                    mute <- lift isMute
+                    -- when mute $ yield x
+                    if mute
+                    then yield x
+                    else liftIO $ putStrLn "-- Speaking, ignoring what I hear"
+                    loop qs
 
     loop questions
     liftIO $ killThread tid
     where
         askQuestion :: [Text] -> Dors [Text]
         askQuestion questions = do
-            (DorsState w) <- get
+            s@(DorsState w _) <- get
             case w of
                 Awake -> do
                     liftIO $ putStrLn $
                         "-- Asking a question. Questions left: "
                         <> show (length questions - 1)
+                    time <- liftIO getPOSIXTime
+                    put $ s { startedSpeaking = Just time }
                     liftIO $ askRandomQuestion questions
                 _ -> pure questions
 
@@ -136,14 +146,14 @@ handleKeywords = awaitForever $ \utterance ->
         evalDorsCommand :: DorsCommand -> Dors ()
         evalDorsCommand cmd
             | cmd == WakeUp = do
-                (DorsState w) <- get
+                s@(DorsState w _ ) <- get
                 case w of
                     Asleep -> do
                         liftIO wakeUpPhase1
-                        put $ DorsState HalfAsleep
+                        put $ s { wakefulness = HalfAsleep }
                     HalfAsleep -> do
                         liftIO wakeUpPhase2
-                        put $ DorsState Awake
+                        put $ s { wakefulness = Awake }
                     Awake -> pure ()
 
             | cmd == Sleep    = whenAwake $ liftIO sleep
@@ -209,10 +219,19 @@ useUpEmotions = awaitForever $ \emotion ->
 
 whenAwake :: Dors () -> Dors ()
 whenAwake f = do
-    (DorsState w) <- get
+    (DorsState w _) <- get
     case w of
         Awake -> f
         _     -> pure ()
+
+isMute :: Dors Bool
+isMute = do
+    (DorsState _ mStartedSpeaking) <- get
+    case mStartedSpeaking of
+        Nothing -> pure True
+        Just startedSpeaking -> do
+            time <- liftIO getPOSIXTime
+            pure $ (time - startedSpeaking) >= 10
 
 
 physicalEmotions :: E.Emotion -> [PhyEmotion]
