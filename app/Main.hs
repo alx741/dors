@@ -2,7 +2,9 @@
 
 module Main where
 
+import System.Environment (getArgs)
+
 import Dors
 
 main :: IO ()
-main = dors
+main = getArgs >>= dors

@@ -32,8 +32,14 @@ import Text.Mining.Emotion as E
 import Api
 
 
-dors :: IO ()
-dors = do
+dors :: [String] -> IO ()
+dors args = do
+
+    initialState  <-
+            case args of
+                ("-a":_) -> goNeutral >> pure (DorsState Awake)
+                _        -> pure (DorsState Asleep)
+
     installHandler sigINT (Catch $ robot Shutdown) Nothing
 
     emotionalLexicon <- liftIO $ E.loadLexiconFile "data/emotional_lexicon_es.csv"
@@ -42,7 +48,9 @@ dors = do
 
     forkIO runAPI
 
-    flip evalStateT (DorsState Awake) $ runConduit
+    putStrLn $ "*-- Initial State: " <> show initialState
+
+    flip evalStateT initialState $ runConduit
         $  sourceUtterance 10 questions
         .| decodeUtf8C
         .| cleanUtterance
@@ -56,7 +64,7 @@ type Dors = StateT DorsState IO
 
 data DorsState = DorsState
     { wakefulness :: Wakefulness
-    } deriving (Eq)
+    } deriving (Eq, Show)
 
 data Wakefulness
     = Asleep
