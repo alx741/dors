@@ -1,19 +1,25 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-unused-do-bind #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 module Dors where
 
 import Conduit
-import Control.Concurrent         (forkIO)
+import Control.Concurrent         (forkIO, killThread, newEmptyMVar, putMVar)
+import Control.Concurrent.MVar    (takeMVar)
+import Control.Monad              (forever)
 import Control.Monad.Trans.State
+import Data.ByteString            (ByteString, hGetLine)
 import Data.Conduit.Process
 import Data.Set                   (Set, fromList, member)
 import Data.Text                  as T (Text, filter, strip, toLower, words)
 import Data.Time.Clock            (getCurrentTime)
 import Database.PostgreSQL.Simple
 import Prelude                    as P hiding (words)
+import System.IO                  (BufferMode (..), hSetBuffering)
 import System.Posix.Signals
 import System.Random              (randomRIO)
+import System.Timeout             (timeout)
 
 import Text.Mining.StopWords (StopWordsLexiconNoDiacritics,
                               readLexiconFileIgnoreDiacritics)
@@ -21,30 +27,34 @@ import Text.Mining.StopWords (StopWordsLexiconNoDiacritics,
 import Animation
 import Driver
 import Text.Mining.Emotion as E
+import Voice               (say)
 
 import Api
 
-dors :: IO ()
-dors = do
-    _ <- installHandler sigINT (Catch $ robot Shutdown) Nothing
+sourceUtterance :: ConduitT () ByteString Dors ()
+sourceUtterance = do
+    (_, Just outp, _, _phandle) <- liftIO $ createProcess $ (speechCmd "data/asr_model")  { std_out = CreatePipe, std_in = CreatePipe }
+    liftIO $ hSetBuffering outp LineBuffering
+    mvar <- liftIO $ newEmptyMVar
+    tid <- liftIO $ forkIO $ forever $ hGetLine outp >>= putMVar mvar
 
-    emotionalLexicon <- liftIO $ E.loadLexiconFile "data/emotional_lexicon_es.csv"
-    stopWordsLexion <- liftIO $ readLexiconFileIgnoreDiacritics "data/stopwords_es"
+    let loop = do
+            result <- liftIO $ timeout (seconds 5) (takeMVar mvar)
+            case result of
+                Nothing -> lift askQuestion >> loop
+                Just x  -> yield x >> loop
 
-    (ClosedStream, speechSource, Inherited, _) <- streamingProcess $ speechCmd "data/asr_model"
+    loop
+    liftIO $ killThread tid
 
-    _ <- forkIO runAPI
-
-    -- flip evalStateT (DorsState Awake) $ runConduit
-    flip evalStateT (DorsState Asleep) $ runConduit
-        $  speechSource
-        .| decodeUtf8C
-        .| cleanUtterance
-        .| handleKeywords
-        .| emotionalAnalysis emotionalLexicon stopWordsLexion
-        .| conveyEmotion
-        .| storeEmotion
     where
+        askQuestion :: Dors ()
+        askQuestion = whenAwake $ do
+            liftIO $ say "pregunta"
+            pure ()
+
+        seconds s = s * 1000000
+
         speechCmd modelDir = shell
             $  "pocketsphinx_continuous"
             <> " -hmm " <> modelDir
@@ -52,6 +62,25 @@ dors = do
             <> " -dict " <> modelDir <> "/es.dict"
             <> " -inmic " <> "yes"
             <> " 2> stt.log"
+
+dors :: IO ()
+dors = do
+    installHandler sigINT (Catch $ robot Shutdown) Nothing
+
+    emotionalLexicon <- liftIO $ E.loadLexiconFile "data/emotional_lexicon_es.csv"
+    stopWordsLexion <- liftIO $ readLexiconFileIgnoreDiacritics "data/stopwords_es"
+
+    forkIO runAPI
+
+    flip evalStateT (DorsState Asleep) $ runConduit
+        $  sourceUtterance
+        .| decodeUtf8C
+        .| cleanUtterance
+        -- .| handleKeywords
+        .| emotionalAnalysis emotionalLexicon stopWordsLexion
+        -- .| conveyEmotion
+        -- .| storeEmotion
+        .| useUpEmotions
 
 type Dors = StateT DorsState IO
 
@@ -154,7 +183,7 @@ storeEmotion :: ConduitT E.Emotion Void Dors ()
 storeEmotion = awaitForever $ \emotion -> do
     dbConn <- liftIO $ connectPostgreSQL "host=localhost port=5432 dbname=dors user=alx password=verde"
     time <- liftIO getCurrentTime
-    _ <- liftIO $ execute dbConn "insert into emotions (emotion, at) values (?, ?)" (show emotion, time)
+    liftIO $ execute dbConn "insert into emotions (emotion, at) values (?, ?)" (show emotion, time)
     pure ()
 
 useUpEmotions :: ConduitT E.Emotion Void Dors ()
