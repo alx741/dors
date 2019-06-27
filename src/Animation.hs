@@ -15,6 +15,11 @@ wait = threadDelay . (* 1000)
 noiseDir = "./data/sound"
 makeNoise' = makeNoise noiseDir
 
+goNeutral :: IO ()
+goNeutral = do
+    setEmotion Neutral
+    wait 1000
+
 wakeUpPhase1 :: IO ()
 wakeUpPhase1 = do
     setEyes Suspicious

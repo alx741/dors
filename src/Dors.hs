@@ -26,42 +26,11 @@ import Text.Mining.StopWords (StopWordsLexiconNoDiacritics,
 
 import Animation
 import Driver
+import Inquire
 import Text.Mining.Emotion as E
-import Voice               (say)
 
 import Api
 
-sourceUtterance :: ConduitT () ByteString Dors ()
-sourceUtterance = do
-    (_, Just outp, _, _phandle) <- liftIO $ createProcess $ (speechCmd "data/asr_model")  { std_out = CreatePipe, std_in = CreatePipe }
-    liftIO $ hSetBuffering outp LineBuffering
-    mvar <- liftIO $ newEmptyMVar
-    tid <- liftIO $ forkIO $ forever $ hGetLine outp >>= putMVar mvar
-
-    let loop = do
-            result <- liftIO $ timeout (seconds 5) (takeMVar mvar)
-            case result of
-                Nothing -> lift askQuestion >> loop
-                Just x  -> yield x >> loop
-
-    loop
-    liftIO $ killThread tid
-
-    where
-        askQuestion :: Dors ()
-        askQuestion = whenAwake $ do
-            liftIO $ say "pregunta"
-            pure ()
-
-        seconds s = s * 1000000
-
-        speechCmd modelDir = shell
-            $  "pocketsphinx_continuous"
-            <> " -hmm " <> modelDir
-            <> " -lm " <> modelDir <> "/es-20k.lm"
-            <> " -dict " <> modelDir <> "/es.dict"
-            <> " -inmic " <> "yes"
-            <> " 2> stt.log"
 
 dors :: IO ()
 dors = do
@@ -69,11 +38,12 @@ dors = do
 
     emotionalLexicon <- liftIO $ E.loadLexiconFile "data/emotional_lexicon_es.csv"
     stopWordsLexion <- liftIO $ readLexiconFileIgnoreDiacritics "data/stopwords_es"
+    questions <- liftIO $ loadQuestions "data/questions"
 
     forkIO runAPI
 
-    flip evalStateT (DorsState Asleep) $ runConduit
-        $  sourceUtterance
+    flip evalStateT (DorsState Awake) $ runConduit
+        $  sourceUtterance 10 questions
         .| decodeUtf8C
         .| cleanUtterance
         -- .| handleKeywords
@@ -100,6 +70,45 @@ data DorsCommand
     | SayName
     | SayHello
     deriving (Show, Eq)
+
+sourceUtterance :: Int -> [Text] -> ConduitT () ByteString Dors ()
+sourceUtterance s questions = do
+    (_, Just outp, _, _phandle) <- liftIO $ createProcess $ (speechCmd "data/asr_model")  { std_out = CreatePipe, std_in = CreatePipe }
+    liftIO $ hSetBuffering outp LineBuffering
+    mvar <- liftIO $ newEmptyMVar
+    tid <- liftIO $ forkIO $ forever $ hGetLine outp >>= putMVar mvar
+
+    let loop qs = do
+            result <- liftIO $ timeout (seconds s) (takeMVar mvar)
+            case result of
+                Nothing -> do
+                    qs' <- lift $ askQuestion qs
+                    loop qs'
+                Just x -> yield x >> loop qs
+
+    loop questions
+    liftIO $ killThread tid
+    where
+        askQuestion :: [Text] -> Dors [Text]
+        askQuestion questions = do
+            (DorsState w) <- get
+            case w of
+                Awake -> do
+                    liftIO $ putStrLn $
+                        "-- Asking a question. Questions left: "
+                        <> show (length questions - 1)
+                    liftIO $ askRandomQuestion questions
+                _ -> pure questions
+
+        seconds s = s * 1000000
+
+        speechCmd modelDir = shell
+            $  "pocketsphinx_continuous"
+            <> " -hmm " <> modelDir
+            <> " -lm " <> modelDir <> "/es-20k.lm"
+            <> " -dict " <> modelDir <> "/es.dict"
+            <> " -inmic " <> "yes"
+            <> " 2> stt.log"
 
 cleanUtterance :: ConduitT Text Text Dors ()
 cleanUtterance = awaitForever $ \rawUtterance -> do
