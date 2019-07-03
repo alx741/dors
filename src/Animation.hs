@@ -74,8 +74,8 @@ sayName = do
     wait 1000
     setEmotion Smiley
     say "me llamo dors"
-    wait 1500
-    makeNoise' LittleLaughter
+    -- wait 1500
+    -- makeNoise' LittleLaughter
     wait 2000
     setEmotion Neutral
 
