@@ -7,7 +7,7 @@ module Voice
     , makeNoise
     ) where
 
-import Control.Concurrent (ThreadId, forkIO)
+import Control.Concurrent (ThreadId, forkIO, threadDelay)
 import Data.Char          (toLower)
 import Data.Text          (Text, unpack)
 import System.Process     (callCommand)
@@ -30,8 +30,8 @@ defaultConfig = VoiceConfig
     , mainPitch          = 80
     , wordGap            = 1
     , overdrive          = 10
-    , postPitch          = 300
-    , mainEchoDecay      = 0.2
+    , postPitch          = 250
+    , mainEchoDecay      = 0
     , secondaryEchoDecay = 0.7
     }
 
@@ -51,8 +51,8 @@ sayWithConfig cnf = forkIO . callCommand . buildCmd
             <> " | play -"
             <> " overdrive " <> overdrive' cnf'
             <> " pitch " <> postPitch' cnf'
-            <> " echo 0.8 0.88 60 " <> mainEchoDecay' cnf'
-            <> " echo 0.8 0.7 6 " <> secondaryEchoDecay' cnf'
+            -- <> " echo 0.8 0.88 60 " <> mainEchoDecay' cnf'
+            -- <> " echo 0.8 0.7 6 " <> secondaryEchoDecay' cnf'
             where cnf' = voiceConfig2String cnf
 
 -- | /Say/ using the 'defaultConfig'
