@@ -26,9 +26,10 @@ import Text.Mining.StopWords (StopWordsLexiconNoDiacritics,
                               readLexiconFileIgnoreDiacritics)
 
 import Animation
-import Driver
+import Driver as D
 import Inquire
 import Text.Mining.Emotion as E
+import Voice
 
 import Api
 
@@ -52,7 +53,7 @@ dors args = do
     putStrLn $ "*-- Initial State: " <> show initialState
 
     flip evalStateT initialState $ runConduit
-        $  sourceUtterance 10 questions
+        $  sourceUtterance 20 questions
         .| decodeUtf8C
         .| cleanUtterance
         .| handleKeywords
@@ -195,16 +196,28 @@ emotionalAnalysis emotional stopwords = awaitForever $ \utterance ->
     yield $ E.utteranceEmotion emotional stopwords utterance
 
 conveyEmotion :: ConduitT E.Emotion E.Emotion Dors ()
-conveyEmotion = awaitForever $ \emotion -> convey emotion >> yield emotion
-    where
-        convey emotion = lift $ whenAwake $ liftIO $ do
-            putStrLn $ "-- Conveying emotion: " <> show emotion
-            rndPickPhyEmotion emotion >>= setEmotion
+conveyEmotion = awaitForever $ \emotion -> lift (whenAwake $ liftIO (convey emotion)) >> yield emotion
 
-        rndPickPhyEmotion :: E.Emotion -> IO PhyEmotion
-        rndPickPhyEmotion e =
-            let emotions = physicalEmotions e
-            in (emotions !!) <$> randomRIO (0, length emotions - 1)
+convey emotion = do
+    putStrLn $ "-- Conveying emotion: " <> show emotion
+    rndPickPhyEmotion emotion >>= conveyPhy
+
+conveyPhy :: PhyEmotion -> IO ()
+conveyPhy e = do
+    case e of
+        D.Angry -> makeNoise "./data/sound" Groan >> pure ()
+        D.Sad -> makeNoise "./data/sound" Whine >> pure ()
+        D.Smiley -> makeNoise "./data/sound" LittleLaughter >> pure ()
+        D.Surprised -> makeNoise "./data/sound" Ooh >> pure ()
+        D.Confused -> makeNoise "./data/sound" Ah >> pure ()
+        D.Suspicious -> makeNoise "./data/sound" Mmh >> pure ()
+        _ -> pure ()
+    setEmotion e
+
+rndPickPhyEmotion :: E.Emotion -> IO PhyEmotion
+rndPickPhyEmotion e =
+    let emotions = physicalEmotions e
+    in (emotions !!) <$> randomRIO (0, length emotions - 1)
 
 storeEmotion :: ConduitT E.Emotion Void Dors ()
 storeEmotion = awaitForever $ \emotion -> do
