@@ -80,6 +80,10 @@ data Noise
     | Groan
     | Interjection
     | LittleLaughter
+    | Whine
+    | Ooh
+    | Ah
+    | Mmh
     deriving (Show, Eq)
 
 data VoiceConfigString = VoiceConfigString
