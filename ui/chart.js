@@ -1,17 +1,19 @@
 var ctx = document.getElementById('chart').getContext('2d');
 
-fetch('/emotions', {
-    method: "GET",
-    mode: "cors",
-    cache: "no-cache",
-    credentials: "same-origin",
-    redirect: "follow",
-    referrer: "no-referrer",
-    body: null,
-})
-.then(res => res.json())
-.then(data => renderData(data))
-.catch(e => reportDataError());
+setInterval(function() {
+    fetch('/emotions', {
+        method: "GET",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+        redirect: "follow",
+        referrer: "no-referrer",
+        body: null,
+    })
+    .then(res => res.json())
+    .then(data => renderData(data))
+    .catch(e => reportDataError());
+}, 1000);
 
 function reportDataError() {
     alert("Hubo un problema inesperado");
