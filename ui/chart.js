@@ -1,19 +1,17 @@
 var ctx = document.getElementById('chart').getContext('2d');
 
-setInterval(function() {
-    fetch('/emotions', {
-        method: "GET",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "same-origin",
-        redirect: "follow",
-        referrer: "no-referrer",
-        body: null,
-    })
-    .then(res => res.json())
-    .then(data => renderData(data))
-    .catch(e => reportDataError());
-}, 1000);
+fetch('/emotions', {
+    method: "GET",
+    mode: "cors",
+    cache: "no-cache",
+    credentials: "same-origin",
+    redirect: "follow",
+    referrer: "no-referrer",
+    body: null,
+})
+.then(res => res.json())
+.then(data => renderData(data))
+.catch(e => reportDataError());
 
 function reportDataError() {
     alert("Hubo un problema inesperado");
@@ -58,7 +56,7 @@ function renderData(data) {
                     break;
 
                 case "Surprise":
-                    labels.push("Asombro");
+                    labels.push("Sorpresa");
                     break;
 
                 case "None":
@@ -84,14 +82,14 @@ function renderChart(labels, points)
                 label: 'Circumplejo emocional',
                 data: points,
                 backgroundColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)'
+                    '#3ca5c4',
+                    '#ea7204',
+                    '#ecc604',
+                    '#047a34',
+                    '#1c6dac',
+                    '#7b4ea3',
+                    '#7cbd0c',
+                    '#d90242'
                 ],
                 borderWidth: 5
             }]
